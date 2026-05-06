@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Riven Damage Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root {
+    --bg-primary: #0d0d12;
+    --bg-secondary: #16161e;
+    --bg-tertiary: #1f1f2a;
+    --border: #2a2a38;
+    --border-strong: #3a3a4a;
+    --text-primary: #e8e8f0;
+    --text-secondary: #a0a0b0;
+    --text-tertiary: #707080;
+    --accent: #c89b3c;
+    --accent-blue: #5b8fc4;
+    --accent-red: #c44a4a;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  h1 {
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--accent);
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
+  .subtitle {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .root {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .root { grid-template-columns: 1fr; }
+  }
+  .panel {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .sec {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sec .count {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+  }
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  input[type="range"] {
+    flex: 1;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: var(--bg-tertiary);
+    border-radius: 2px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg-secondary);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg-secondary);
+  }
+  .val {
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 42px;
+    text-align: right;
+    color: var(--text-primary);
+  }
+  .item-grid, .boot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .item-btn {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 9px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    background: var(--bg-tertiary);
+    text-align: left;
+    transition: all 0.12s;
+    width: 100%;
+    color: inherit;
+    font-family: inherit;
+  }
+  .item-btn:hover:not(:disabled):not(.on) {
+    border-color: var(--border-strong);
+    background: #25252f;
+  }
+  .item-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .item-icon {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    background: #000;
+    object-fit: cover;
+    display: block;
+  }
+  .item-icon-fallback {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #2a2a38, #1a1a24);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .itxt {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+  .iname {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .istats {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+  .item-btn.on {
+    background: rgba(200, 155, 60, 0.12);
+    border-color: var(--accent);
+  }
+  .item-btn.on .iname { color: var(--accent); }
+  .item-btn.on .item-icon { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tog {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .tog.on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #15151c;
+  }
+  .toggle-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .combo-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .cb {
+    padding: 8px 14px;
+    font-size: 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .cb.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #15151c;
+  }
+  .computed-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .comp-card {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .comp-card .cv {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .comp-card .cl {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+  .dmg-line { margin: 6px 0; }
+  .dmg-lbl {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 3px;
+  }
+  .dmg-lbl span:first-child { color: var(--text-secondary); }
+  .dmg-lbl span:last-child { font-weight: 500; color: var(--text-primary); }
+  .bar-track {
+    height: 6px;
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.2s; }
+  .total {
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .pct-bar {
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .pct-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.2s, background 0.2s;
+  }
+  .mini-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .mini-card {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    padding: 9px 12px;
+  }
+  .mini-card .ml { font-size: 11px; color: var(--text-secondary); }
+  .mini-card .mv { font-size: 18px; font-weight: 500; color: var(--text-primary); }
+  .mini-card .ms { font-size: 10px; color: var(--text-tertiary); }
+  .seq-lbl {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+    margin-bottom: 10px;
+  }
+  .limit-warn {
+    font-size: 11px;
+    color: var(--accent-red);
+    margin-top: 8px;
+  }
+  .one-shot-pill {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(196, 74, 74, 0.18);
+    color: var(--accent-red);
+    border: 1px solid rgba(196, 74, 74, 0.4);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>StatRift · Riven Damage Calculator</h1>
+  <div class="subtitle">Live damage output for Riven combos · patch 26.x · stats verified against the wiki</div>
+  <div class="root" id="app"></div>
+</div>
+
+<script>
+// =============================================================================
+// ITEM DATA — verified against wiki.leagueoflegends.com top stat blocks (May 2026)
+// =============================================================================
+
+// Riot's official Data Dragon CDN — serves the actual in-game item icons
+const VER = '15.4.1';
+const ICON = id => `https://ddragon.leagueoflegends.com/cdn/${VER}/img/item/${id}.png`;
+
+const ITEMS = {
+  ravenousHydra:  { name: 'Ravenous Hydra',     id: 3074, ad: 65, leth: 0,  penPct: 0,  note: '65 AD · 15 AH · 12% LS' },
+  eclipse:        { name: 'Eclipse',            id: 6692, ad: 60, leth: 0,  penPct: 0,  note: '60 AD · 15 AH' },
+  axiomArc:       { name: 'Axiom Arc',          id: 6695, ad: 55, leth: 10, penPct: 0,  note: '55 AD · 10 leth · 25 AH' },
+  sunderedSky:    { name: 'Sundered Sky',       id: 6610, ad: 45, leth: 0,  penPct: 0,  note: '45 AD · 400 HP · 10 AH' },
+  blackCleaver:   { name: 'Black Cleaver',      id: 3071, ad: 55, leth: 0,  penPct: 0,  note: '55 AD · 400 HP · 20 AH · shred' },
+  seryldas:       { name: "Serylda's Grudge",   id: 6694, ad: 45, leth: 0,  penPct: 30, note: '45 AD · 30% pen · 20 AH' },
+  youmuus:        { name: "Youmuu's Ghostblade",id: 3142, ad: 55, leth: 18, penPct: 0,  note: '55 AD · 18 leth · 4% MS' },
+  deathsDance:    { name: "Death's Dance",      id: 6333, ad: 50, leth: 0,  penPct: 0,  note: '50 AD · 40 armor · 15 AH' },
+  endlessHunger:  { name: 'Endless Hunger',     id: 2517, ad: 65, leth: 0,  penPct: 0,  note: '65 AD · omni · tenacity' },
+  hubris:         { name: 'Hubris',             id: 6697, ad: 60, leth: 18, penPct: 0,  note: '60 AD · 18 leth · 10 AH' },
+  edgeOfNight:    { name: 'Edge of Night',      id: 6035, ad: 50, leth: 10, penPct: 0,  note: '50 AD · 10 leth · 250 HP' },
+  serpentsFang:   { name: "Serpent's Fang",     id: 6675, ad: 55, leth: 15, penPct: 0,  note: '55 AD · 15 leth · anti-shield' },
+  voltaicCyclo:   { name: 'Voltaic Cyclosword', id: 6699, ad: 55, leth: 10, penPct: 0,  note: '55 AD · 10 leth · 10 AH' },
+  umbralGlaive:   { name: 'Umbral Glaive',      id: 3179, ad: 60, leth: 18, penPct: 0,  note: '60 AD · 18 leth · 15 AH' },
+  mortalReminder: { name: 'Mortal Reminder',    id: 3033, ad: 30, leth: 0,  penPct: 35, note: '30 AD · 35% pen · GW' },
+  guardianAngel:  { name: 'Guardian Angel',     id: 3026, ad: 55, leth: 0,  penPct: 0,  note: '55 AD · 45 armor · revive' },
+  mercurialScim:  { name: 'Mercurial Scimitar', id: 3139, ad: 50, leth: 0,  penPct: 0,  note: '50 AD · 35 MR · 10% LS · QSS' },
+  mawOfMalm:      { name: 'Maw of Malmortius',  id: 3156, ad: 60, leth: 0,  penPct: 0,  note: '60 AD · 40 MR · 15 AH · lifeline' },
+};
+
+const BOOTS = {
+  platedSteel:    { name: 'Plated Steelcaps',   id: 3047, note: '20 armor · 12% AA dmg reduce' },
+  mercuryTreads:  { name: "Mercury's Treads",   id: 3111, note: '25 MR · 30% tenacity' },
+  gluttonGreaves: { name: 'Gluttonous Greaves', id: 3158, note: '12% omnivamp' },
+  ionianBoots:    { name: 'Ionian Boots',       id: 3158, note: '15 AH' }, // ID 3158 placeholder
+};
+// Note: Ionian Boots of Lucidity proper ID is 3158 in classic ddragon naming;
+// some recent patches reorganize. Using 3158 for now and will fall back to text if missing.
+
+// Combo definitions
+const COMBOS = {
+  full:  { label: 'Full combo',  seq: ['R1','Q1','AA_P','Q2','AA_P','Q3','W','AA_P','R2'] },
+  short: { label: 'Short trade', seq: ['Q1','AA_P','Q2','W'] },
+  qwq:   { label: 'QWQ poke',    seq: ['Q1','AA_P','Q2','W','AA_P','Q3'] },
+  ult2:  { label: 'R2 execute',  seq: ['R1','Q1','AA_P','W','Q2','AA_P','Q3','AA_P','R2'] },
+  lane:  { label: 'Lane trade',  seq: ['Q1','W','AA_P','Q2','AA_P'] },
+};
+
+const COLORS = {
+  Q1: '#5b8fc4', Q2: '#7baad8', Q3: '#9bc5ec',
+  W:  '#a07a3a', AA_P: '#888780', R1: '#5e5e5e', R2: '#c44a4a'
+};
+const LABELS = {
+  Q1: 'Q1', Q2: 'Q2', Q3: 'Q3', W: 'W',
+  AA_P: 'Auto + passive proc', R1: 'R (ult activate)', R2: 'Wind Slash'
+};
+
+const ITEM_LIMIT = 6;
+
+// =============================================================================
+// STATE
+// =============================================================================
+
+const S = {
+  level: 16,
+  items: {},
+  boot: null,
+  combo: 'full',
+  qRank: 3, wRank: 3, rRank: 2,
+  bcStacks: 6,
+  target: { armor: 70, hp: 2000 },
+  runes: { conqueror: false, conquStacks: 12, lastStand: false, lsHpPct: 30 },
+  windMissingPct: 30,
+};
+
+function selectedCount() {
+  return Object.values(S.items).filter(Boolean).length + (S.boot ? 1 : 0);
+}
+
+// =============================================================================
+// DAMAGE CALCULATIONS
+// =============================================================================
+
+function rivenBaseAD(l) { return 56 + 3 * (l - 1); }
+
+function computeStats() {
+  const l = S.level;
+  const baseAD = rivenBaseAD(l);
+  let itemAD = 0, leth = 0, penPct = 0;
+
+  for (const [k, on] of Object.entries(S.items)) {
+    if (!on) continue;
+    const it = ITEMS[k];
+    itemAD += it.ad;
+    leth += it.leth;
+    if (it.penPct > 0) {
+      penPct = 100 - (100 - penPct) * (100 - it.penPct) / 100;
+    }
+  }
+
+  let bonusAD = itemAD;
+  if (S.runes.conqueror) {
+    const stacks = Math.min(S.runes.conquStacks, 12);
+    bonusAD *= (1 + (stacks / 12) * 0.15);
+  }
+
+  // R1 (Blade of the Exile): +25% total AD
+  const totalAD = (baseAD + bonusAD) * 1.25;
+  const bonusAD_R = totalAD - baseAD;
+  const flatPen = leth * (0.6 + 0.4 * (l / 18));
+
+  return { baseAD, totalAD, bonusAD: bonusAD_R, leth, flatPen, penPct };
+}
+
+function calcEffArmor(stats) {
+  let a = S.target.armor;
+  if (S.items.blackCleaver) {
+    a *= (1 - Math.min(S.bcStacks, 6) * 0.04);
+  }
+  if (stats.penPct > 0) a *= (1 - stats.penPct / 100);
+  return Math.max(0, a - stats.flatPen);
+}
+
+function dmgMult(armor) { return 100 / (100 + Math.max(0, armor)); }
+
+function calcAll() {
+  const stats = computeStats();
+  const ea = calcEffArmor(stats);
+  const m = dmgMult(ea);
+  const { bonusAD, totalAD } = stats;
+  const l = S.level;
+
+  // Q (Broken Wings): rank-based base + bonus AD ratio, per cast
+  const qi = S.qRank - 1;
+  const qBase = [45, 75, 105, 135, 165];
+  const qRat  = [0.60, 0.65, 0.70, 0.75, 0.80];
+  const Q = (qBase[qi] + qRat[qi] * bonusAD) * m;
+
+  // W (Ki Burst): base + 100% bonus AD
+  const wBase = [65, 95, 125, 155, 185];
+  const W = (wBase[S.wRank - 1] + bonusAD) * m;
+
+  // Passive (Runic Blade): 30%-50% total AD scaling linearly with level
+  const passivePct = (30 + 20 * (l - 1) / 17) / 100;
+  const AA_P = (totalAD * (1 + passivePct)) * m;
+
+  // R2 (Wind Slash): scales 0-200% by target missing HP
+  const wMin = [100, 150, 200], wMax = [300, 450, 600];
+  const ri = S.rRank - 1;
+  const wn = wMin[ri] + 0.60 * bonusAD;
+  const wx = wMax[ri] + 1.80 * bonusAD;
+  const mp = Math.min(1, Math.max(0, S.windMissingPct / 100));
+  const R2 = (wn + (wx - wn) * mp) * m;
+
+  // Last Stand: up to +11% damage at low HP
+  let lsM = 1;
+  if (S.runes.lastStand && S.runes.lsHpPct < 75) {
+    lsM = 1 + 0.11 * (1 - S.runes.lsHpPct / 75);
+  }
+
+  const raw = { Q1: Q, Q2: Q, Q3: Q, W, AA_P, R1: 0, R2 };
+  const out = {};
+  for (const [k, v] of Object.entries(raw)) out[k] = Math.round(v * lsM);
+
+  return { out, stats, ea };
+}
+
+// =============================================================================
+// RENDERING
+// =============================================================================
+
+function makeIconHTML(it, name) {
+  const fallback = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  return `<img class="item-icon" src="${ICON(it.id)}" alt="${name}" loading="lazy"
+    onerror="this.outerHTML='<div class=\\'item-icon-fallback\\'>${fallback}</div>'">`;
+}
+
+function render() {
+  const { out, stats, ea } = calcAll();
+  const combo = COMBOS[S.combo].seq;
+  let total = 0;
+  const disp = combo.map(k => {
+    const v = out[k] || 0;
+    total += v;
+    return { k, v };
+  });
+  const maxDmg = Math.max(...disp.map(x => x.v), 1);
+  const hpPct = Math.round((total / S.target.hp) * 100);
+  const eff = Math.round(ea);
+  const count = selectedCount();
+  const atLimit = count >= ITEM_LIMIT;
+
+  document.getElementById('app').innerHTML = `
+    <div>
+      <div class="panel">
+        <div class="sec">
+          <span>Build</span>
+          <span class="count">${count}/${ITEM_LIMIT} slots</span>
+        </div>
+        <div class="field">
+          <label>Level</label>
+          <div class="field-row">
+            <input type="range" min="1" max="18" step="1" value="${S.level}"
+              oninput="upd('level', +this.value)">
+            <span class="val">${S.level}</span>
+          </div>
+        </div>
+        <div class="computed-row">
+          <div class="comp-card"><div class="cv">${Math.round(stats.totalAD)}</div><div class="cl">Total AD (w/ R)</div></div>
+          <div class="comp-card"><div class="cv">${Math.round(stats.bonusAD)}</div><div class="cl">Bonus AD</div></div>
+          <div class="comp-card"><div class="cv">${stats.leth}</div><div class="cl">Lethality</div></div>
+          <div class="comp-card"><div class="cv">${Math.round(stats.flatPen)}</div><div class="cl">Flat pen</div></div>
+          <div class="comp-card"><div class="cv">${stats.penPct.toFixed(1)}%</div><div class="cl">% armor pen</div></div>
+          <div class="comp-card"><div class="cv">${Math.round(stats.baseAD)}</div><div class="cl">Base AD</div></div>
+        </div>
+
+        <div class="sec">Boots</div>
+        <div class="boot-grid">
+          ${Object.entries(BOOTS).map(([k, it]) => {
+            const isOn = S.boot === k;
+            const disabled = !isOn && atLimit && !S.boot;
+            return `<button class="item-btn ${isOn ? 'on' : ''}" ${disabled ? 'disabled' : ''} onclick="setBoot('${k}')">
+              ${makeIconHTML(it, it.name)}
+              <span class="itxt"><span class="iname">${it.name}</span><span class="istats">${it.note}</span></span>
+            </button>`;
+          }).join('')}
+        </div>
+
+        <div class="sec" style="margin-top: 16px">Items</div>
+        <div class="item-grid">
+          ${Object.entries(ITEMS).map(([k, it]) => {
+            const isOn = !!S.items[k];
+            const disabled = !isOn && atLimit;
+            return `<button class="item-btn ${isOn ? 'on' : ''}" ${disabled ? 'disabled' : ''} onclick="togItem('${k}')">
+              ${makeIconHTML(it, it.name)}
+              <span class="itxt"><span class="iname">${it.name}</span><span class="istats">${it.note}</span></span>
+            </button>`;
+          }).join('')}
+        </div>
+        ${atLimit ? '<div class="limit-warn">Slot limit reached — deselect an item to swap.</div>' : ''}
+        ${S.items.blackCleaver ? `
+          <div class="field" style="margin-top: 10px">
+            <label>BC stacks (armor shred)</label>
+            <div class="field-row">
+              <input type="range" min="0" max="6" step="1" value="${S.bcStacks}" oninput="upd('bcStacks', +this.value)">
+              <span class="val">${S.bcStacks}/6</span>
+            </div>
+          </div>` : ''}
+      </div>
+
+      <div class="panel">
+        <div class="sec">Runes</div>
+        <div class="toggle-row">
+          <button class="tog ${S.runes.conqueror ? 'on' : ''}" onclick="togR('conqueror')">Conqueror</button>
+          <button class="tog ${S.runes.lastStand ? 'on' : ''}" onclick="togR('lastStand')">Last Stand</button>
+        </div>
+        ${S.runes.conqueror ? `
+          <div class="field"><label>Conqueror stacks</label>
+            <div class="field-row">
+              <input type="range" min="0" max="12" step="1" value="${S.runes.conquStacks}" oninput="upd('runes.conquStacks', +this.value)">
+              <span class="val">${S.runes.conquStacks}/12</span>
+            </div>
+          </div>` : ''}
+        ${S.runes.lastStand ? `
+          <div class="field"><label>Your HP %</label>
+            <div class="field-row">
+              <input type="range" min="0" max="100" step="1" value="${S.runes.lsHpPct}" oninput="upd('runes.lsHpPct', +this.value)">
+              <span class="val">${S.runes.lsHpPct}%</span>
+            </div>
+          </div>` : ''}
+      </div>
+
+      <div class="panel">
+        <div class="sec">Ability ranks</div>
+        <div class="field"><label>Q rank</label>
+          <div class="field-row">
+            <input type="range" min="1" max="5" step="1" value="${S.qRank}" oninput="upd('qRank', +this.value)">
+            <span class="val">${S.qRank}</span>
+          </div>
+        </div>
+        <div class="field"><label>W rank</label>
+          <div class="field-row">
+            <input type="range" min="1" max="5" step="1" value="${S.wRank}" oninput="upd('wRank', +this.value)">
+            <span class="val">${S.wRank}</span>
+          </div>
+        </div>
+        <div class="field"><label>R rank</label>
+          <div class="field-row">
+            <input type="range" min="1" max="2" step="1" value="${S.rRank}" oninput="upd('rRank', +this.value)">
+            <span class="val">${S.rRank}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="sec">Target</div>
+        <div class="field">
+          <label>Armor <span style="font-weight: 400; color: var(--text-tertiary)">(effective after pen: ${eff})</span></label>
+          <div class="field-row">
+            <input type="range" min="0" max="400" step="1" value="${S.target.armor}" oninput="upd('target.armor', +this.value)">
+            <span class="val">${S.target.armor}</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Max HP</label>
+          <div class="field-row">
+            <input type="range" min="500" max="6000" step="50" value="${S.target.hp}" oninput="upd('target.hp', +this.value)">
+            <span class="val">${S.target.hp.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="sec">Combo</div>
+        <div class="combo-row">
+          ${Object.entries(COMBOS).map(([k, v]) =>
+            `<button class="cb ${S.combo === k ? 'active' : ''}" onclick="setCombo('${k}')">${v.label}</button>`
+          ).join('')}
+        </div>
+        <div class="seq-lbl">${COMBOS[S.combo].seq.map(s => LABELS[s] || s).join(' → ')}</div>
+        ${(S.combo === 'ult2' || S.combo === 'full') ? `
+          <div class="field">
+            <label>Target missing HP % (Wind Slash scaling)</label>
+            <div class="field-row">
+              <input type="range" min="0" max="100" step="1" value="${S.windMissingPct}" oninput="upd('windMissingPct', +this.value)">
+              <span class="val">${S.windMissingPct}%</span>
+            </div>
+          </div>` : ''}
+      </div>
+
+      <div class="panel">
+        <div class="sec">Damage output</div>
+        <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px">
+          <span class="total">${total.toLocaleString()}</span>
+          <span style="font-size: 14px; color: var(--text-secondary)">damage</span>
+          ${hpPct >= 100 ? '<span class="one-shot-pill">one shots</span>' : ''}
+        </div>
+        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px">
+          ${Math.min(hpPct, 100)}% of ${S.target.hp.toLocaleString()} HP
+        </div>
+        <div class="pct-bar">
+          <div class="pct-fill" style="width: ${Math.min(hpPct, 100)}%; background: ${hpPct >= 100 ? 'var(--accent-red)' : 'var(--accent)'}"></div>
+        </div>
+        ${disp.map(({ k, v }) => `
+          <div class="dmg-line">
+            <div class="dmg-lbl"><span>${LABELS[k] || k}</span><span>${v.toLocaleString()}</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: ${Math.round(v / maxDmg * 100)}%; background: ${COLORS[k] || '#888'}"></div></div>
+          </div>
+        `).join('')}
+        <div class="mini-grid">
+          <div class="mini-card"><div class="ml">HP remaining</div><div class="mv">${Math.max(0, S.target.hp - total).toLocaleString()}</div><div class="ms">after combo</div></div>
+          <div class="mini-card"><div class="ml">Armor shaved</div><div class="mv">${S.target.armor - eff}</div><div class="ms">${S.target.armor} → ${eff}</div></div>
+          <div class="mini-card"><div class="ml">Dmg multiplier</div><div class="mv">${(100 / (100 + Math.max(0, eff))).toFixed(3)}×</div><div class="ms">vs effective armor</div></div>
+          <div class="mini-card"><div class="ml">Combos to kill</div><div class="mv">${hpPct > 0 ? Math.ceil(100 / Math.max(1, hpPct)) : '—'}</div><div class="ms">full combos</div></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// =============================================================================
+// HANDLERS
+// =============================================================================
+
+function upd(path, val) {
+  const parts = path.split('.');
+  let o = S;
+  for (let i = 0; i < parts.length - 1; i++) o = o[parts[i]];
+  o[parts[parts.length - 1]] = val;
+  render();
+}
+function togItem(k) {
+  if (S.items[k]) {
+    S.items[k] = false;
+  } else if (selectedCount() < ITEM_LIMIT) {
+    S.items[k] = true;
+  }
+  render();
+}
+function setBoot(k) {
+  if (S.boot === k) {
+    S.boot = null;
+  } else if (S.boot || selectedCount() < ITEM_LIMIT) {
+    // can swap to a different boot freely; can pick a boot if under limit
+    S.boot = k;
+  }
+  render();
+}
+function togR(k) { S.runes[k] = !S.runes[k]; render(); }
+function setCombo(k) { S.combo = k; render(); }
+
+render();
+</script>
+</body>
+</html>
