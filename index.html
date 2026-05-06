@@ -278,18 +278,18 @@
     gap: 8px;
     color: var(--text-secondary);
   }
+  .dmg-icon-slot {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
   .dmg-icon {
     width: 22px;
     height: 22px;
     border-radius: 3px;
-    background: #000;
     object-fit: cover;
     display: block;
-  }
-  .dmg-icon-placeholder {
-    display: inline-block;
-    width: 22px;
-    height: 22px;
   }
   .dmg-lbl > span:last-child { font-weight: 500; color: var(--text-primary); }
   .bar-track {
@@ -909,6 +909,49 @@ async function loadShardIcons() {
   } catch (e) {
     console.warn('Could not load cdragon perks.json for shard icons; falling back to hardcoded paths.', e);
     // Not fatal — shard icons will fall back to the hardcoded URL pattern in STAT_SHARD_ICON
+  }
+}
+
+// Fetch Riven's champion JSON to get the authoritative passive image filename.
+// ddragon's per-champion JSON is the source of truth for these — the file under
+// img/passive/ is whatever the JSON's `passive.image.full` says, and that name
+// can change between patches without warning. Hardcoding "Riven_Passive.png"
+// breaks whenever Riot renames the asset (which they do for Riven specifically
+// after VFX updates). Fetching the JSON makes us patch-proof.
+async function loadChampionData() {
+  try {
+    const res = await fetch(`https://ddragon.leagueoflegends.com/cdn/${VER}/data/en_US/champion/Riven.json`);
+    if (!res.ok) throw new Error('champion JSON fetch failed');
+    const data = await res.json();
+    const riven = data.data && data.data.Riven;
+    if (!riven) throw new Error('Riven entry missing from champion JSON');
+
+    // Update the passive icon URL using the authoritative filename
+    if (riven.passive && riven.passive.image && riven.passive.image.full) {
+      ABILITY_ICONS.passive = `https://ddragon.leagueoflegends.com/cdn/${VER}/img/passive/${riven.passive.image.full}`;
+      STEP_ICON.AA_P = ABILITY_ICONS.passive;
+    }
+    // Also pull authoritative spell filenames in case any of those change too
+    if (Array.isArray(riven.spells)) {
+      const spellByKey = { Q: riven.spells[0], W: riven.spells[1], E: riven.spells[2], R: riven.spells[3] };
+      for (const [key, spell] of Object.entries(spellByKey)) {
+        if (spell && spell.image && spell.image.full) {
+          ABILITY_ICONS[key] = `https://ddragon.leagueoflegends.com/cdn/${VER}/img/spell/${spell.image.full}`;
+        }
+      }
+      // Re-derive the per-step icons from the (possibly updated) ABILITY_ICONS
+      STEP_ICON.Q1 = ABILITY_ICONS.Q;
+      STEP_ICON.Q2 = ABILITY_ICONS.Q;
+      STEP_ICON.Q3 = ABILITY_ICONS.Q;
+      STEP_ICON.W  = ABILITY_ICONS.W;
+      STEP_ICON.R1 = ABILITY_ICONS.R;
+      STEP_ICON.R2 = ABILITY_ICONS.R;
+    }
+    render();
+  } catch (e) {
+    console.warn('Could not load Riven champion JSON; using hardcoded icon filenames.', e);
+    // Not fatal — the hardcoded icon names will still try to load and the broken
+    // icon (if any) will hide gracefully via onerror without breaking layout.
   }
 }
 
@@ -1589,9 +1632,12 @@ function render() {
         </div>
         ${disp.map(({ k, v }) => {
           const iconUrl = STEP_ICON[k];
+          // Always wrap in a fixed-size container so layout never shifts when an icon
+          // fails to load. visibility:hidden keeps the box; only the broken-image
+          // graphic disappears.
           const iconHtml = iconUrl
-            ? `<img class="dmg-icon" src="${iconUrl}" alt="" onerror="this.style.display='none'">`
-            : '<span class="dmg-icon-placeholder"></span>';
+            ? `<span class="dmg-icon-slot"><img class="dmg-icon" src="${iconUrl}" alt="" onerror="this.style.visibility='hidden'"></span>`
+            : '<span class="dmg-icon-slot"></span>';
           return `
           <div class="dmg-line">
             <div class="dmg-lbl">
@@ -1976,9 +2022,29 @@ function hideTooltip() {
 // =============================================================================
 // INIT
 // =============================================================================
-render(); // Render once with loading state
-loadRuneData();
-loadShardIcons();
+render(); // Render once with loading state — page is interactive immediately
+
+// Defer all network fetches until after the window's `load` event fires.
+// Otherwise Chrome's tab spinner / loading bar stays active while these requests
+// (some of which are 2+ MB) are in flight, which makes the page feel like it's
+// stuck loading even though it's already fully rendered and interactive.
+//
+// By the time `load` fires, the document, all stylesheets, and all the initial
+// images have finished — the browser stops showing the loading state, and we
+// start fetching the supplementary data (rune tree, shard icons, champion JSON)
+// quietly in the background. They patch the UI as they arrive, so the user
+// sees rune names appear, then shard icons swap in, etc.
+function startBackgroundFetches() {
+  loadRuneData();
+  loadShardIcons();
+  loadChampionData();
+}
+if (document.readyState === 'complete') {
+  // Page already loaded (e.g. cached refresh) — start immediately
+  startBackgroundFetches();
+} else {
+  window.addEventListener('load', startBackgroundFetches);
+}
 </script>
 </body>
 </html>
