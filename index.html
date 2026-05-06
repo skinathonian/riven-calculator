@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Riven Damage Calculator</title>
+<title>Antcliff's Riven Damage Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   :root {
     --bg-primary: #0d0d12;
     --bg-secondary: #16161e;
     --bg-tertiary: #1f1f2a;
+    --bg-quaternary: #25252f;
     --border: #2a2a38;
     --border-strong: #3a3a4a;
     --text-primary: #e8e8f0;
@@ -26,13 +27,13 @@
     font-family: var(--font);
     background: var(--bg-primary);
     color: var(--text-primary);
-    font-size: 14px;
+    font-size: 15px;
     min-height: 100vh;
-    padding: 20px;
+    padding: 24px;
   }
-  .container { max-width: 1100px; margin: 0 auto; }
+  .container { max-width: 1240px; margin: 0 auto; }
   h1 {
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 500;
     color: var(--accent);
     margin-bottom: 6px;
@@ -40,24 +41,49 @@
   }
   .subtitle {
     color: var(--text-secondary);
-    font-size: 13px;
-    margin-bottom: 20px;
+    font-size: 14px;
+    margin-bottom: 22px;
   }
   .root {
     display: grid;
-    grid-template-columns: 380px 1fr;
-    gap: 14px;
+    grid-template-columns: 420px 1fr;
+    gap: 16px;
     align-items: start;
+  }
+  .root .col-left { display: contents; }
+  .runes-panel-wide {
+    grid-column: 1 / -1; /* span both columns */
+  }
+  .runes-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    position: relative;
+  }
+  .runes-two-col::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: var(--border);
+    transform: translateX(-50%);
+  }
+  .runes-col-primary, .runes-col-secondary {
+    min-width: 0;
   }
   @media (max-width: 900px) {
     .root { grid-template-columns: 1fr; }
+    .runes-two-col { grid-template-columns: 1fr; gap: 16px; }
+    .runes-two-col::before { display: none; }
   }
   .panel {
     background: var(--bg-secondary);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    padding: 16px 18px;
-    margin-bottom: 12px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
   }
   .sec {
     font-size: 11px;
@@ -146,7 +172,7 @@
   }
   .item-btn:hover:not(:disabled):not(.on) {
     border-color: var(--border-strong);
-    background: #25252f;
+    background: var(--bg-quaternary);
   }
   .item-btn:disabled {
     opacity: 0.35;
@@ -199,23 +225,6 @@
   }
   .item-btn.on .iname { color: var(--accent); }
   .item-btn.on .item-icon { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .tog {
-    padding: 6px 12px;
-    font-size: 12px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    cursor: pointer;
-    background: var(--bg-tertiary);
-    color: var(--text-secondary);
-    transition: all 0.15s;
-    font-family: inherit;
-  }
-  .tog.on {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #15151c;
-  }
-  .toggle-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .combo-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .cb {
     padding: 8px 14px;
@@ -259,11 +268,30 @@
   .dmg-lbl {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
-    margin-bottom: 3px;
+    align-items: center;
+    font-size: 13px;
+    margin-bottom: 4px;
   }
-  .dmg-lbl span:first-child { color: var(--text-secondary); }
-  .dmg-lbl span:last-child { font-weight: 500; color: var(--text-primary); }
+  .dmg-lbl-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+  }
+  .dmg-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    background: #000;
+    object-fit: cover;
+    display: block;
+  }
+  .dmg-icon-placeholder {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+  }
+  .dmg-lbl > span:last-child { font-weight: 500; color: var(--text-primary); }
   .bar-track {
     height: 6px;
     background: var(--bg-tertiary);
@@ -272,7 +300,7 @@
   }
   .bar-fill { height: 100%; border-radius: 3px; transition: width 0.2s; }
   .total {
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 500;
     line-height: 1;
     color: var(--accent);
@@ -294,6 +322,53 @@
     grid-template-columns: 1fr 1fr;
     gap: 8px;
     margin-top: 12px;
+  }
+
+  /* ============ HEALING SECTION ============ */
+  .heal-section {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: linear-gradient(180deg, rgba(110, 231, 183, 0.08), rgba(110, 231, 183, 0.03));
+    border: 1px solid rgba(110, 231, 183, 0.25);
+    border-radius: var(--radius-md);
+  }
+  .heal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(110, 231, 183, 0.15);
+  }
+  .heal-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .heal-total {
+    font-size: 22px;
+    font-weight: 500;
+    color: #6ee7b7;
+  }
+  .heal-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin: 4px 0;
+  }
+  .heal-lbl { color: var(--text-secondary); }
+  .heal-val { font-weight: 500; color: var(--text-primary); }
+  .heal-line-triumph .heal-lbl,
+  .heal-line-triumph .heal-val {
+    color: #6ee7b7;
+    font-weight: 500;
+  }
+  .heal-line-inactive .heal-lbl,
+  .heal-line-inactive .heal-val {
+    color: var(--text-tertiary);
+    font-style: italic;
   }
   .mini-card {
     background: var(--bg-tertiary);
@@ -322,55 +397,394 @@
     color: var(--accent-red);
     border: 1px solid rgba(196, 74, 74, 0.4);
   }
+
+  /* ============ RUNE/SHARD TOOLTIP (floating, like Riot client) ============ */
+  .rune-tooltip {
+    position: fixed;
+    z-index: 999;
+    max-width: 320px;
+    background: #0a0a10;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.1s;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-primary);
+  }
+  .rune-tooltip.visible { opacity: 1; }
+  .rune-tooltip .rt-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .rune-tooltip .rt-short {
+    color: var(--text-secondary);
+    font-size: 11px;
+    margin-bottom: 6px;
+    font-style: italic;
+  }
+  .rune-tooltip .rt-short:empty { display: none; }
+  .rune-tooltip .rt-long {
+    color: var(--text-primary);
+  }
+  .rune-tooltip .rt-long:empty { display: none; }
+
+  /* ============ ABILITY RANKS (horizontal) ============ */
+  .ranks-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+  .rank-pick {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+  }
+  .rank-ability-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    background: #000;
+    object-fit: cover;
+    display: block;
+  }
+  .rank-icon-wrap {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    line-height: 0; /* prevents the wrapping span from adding extra vertical space */
+  }
+  .rank-key-overlay {
+    position: absolute;
+    bottom: -2px;
+    left: -2px;
+    background: rgba(0, 0, 0, 0.85);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    letter-spacing: 0;
+  }
+  .rank-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent);
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .rank-btn-row {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+  }
+  .rank-btn {
+    flex: 1;
+    min-width: 28px;
+    padding: 6px 0;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.12s;
+    font-family: inherit;
+  }
+  .rank-btn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+  .rank-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #15151c;
+  }
+
+  /* ============ RUNE SELECTOR ============ */
+  .rune-loading {
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    padding: 20px 0;
+  }
+  .rune-tree-tabs {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+  .rune-tree-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--bg-tertiary);
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-secondary);
+  }
+  .rune-tree-tab:hover { background: var(--bg-quaternary); }
+  .rune-tree-tab.active {
+    border-color: var(--accent);
+    background: rgba(200, 155, 60, 0.1);
+    color: var(--accent);
+  }
+  .rune-tree-tab.secondary { border-style: dashed; }
+  .rune-tree-tab.secondary.active { border-style: solid; }
+  .rune-tree-tab.disabled { opacity: 0.3; cursor: not-allowed; }
+  .rune-tree-tab img {
+    width: 28px; height: 28px;
+    filter: grayscale(0.7) opacity(0.7);
+    transition: filter 0.15s;
+  }
+  .rune-tree-tab.active img { filter: none; }
+  .rune-tree-tab .name {
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .rune-section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-tertiary);
+    margin: 12px 0 6px;
+    font-weight: 600;
+  }
+  .rune-slot {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 10px;
+    justify-content: center;
+  }
+  .rune-slot.keystone-slot { gap: 16px; margin-bottom: 14px; }
+  .rune-pick {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg-tertiary);
+    cursor: pointer;
+    overflow: hidden;
+    padding: 3px;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .rune-pick.keystone { width: 72px; height: 72px; }
+  .rune-pick:hover:not(:disabled) {
+    border-color: var(--border-strong);
+    transform: scale(1.05);
+  }
+  .rune-pick img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: grayscale(0.6) opacity(0.5);
+    transition: filter 0.15s;
+  }
+  .rune-pick.selected {
+    border-color: var(--accent);
+    background: rgba(200, 155, 60, 0.15);
+  }
+  .rune-pick.selected img {
+    filter: none;
+  }
+  .rune-pick:disabled { cursor: not-allowed; }
+  .rune-pick[title] { /* tooltips on hover */ }
+  .rune-tree-block { padding: 8px 0; }
+  .secondary-note {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+    text-align: center;
+  }
+  .stat-shards-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  .stat-shard {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg-tertiary);
+    cursor: pointer;
+    overflow: hidden;
+    padding: 3px;
+    transition: all 0.15s;
+  }
+  .stat-shard.selected {
+    border-color: var(--accent);
+    background: rgba(200, 155, 60, 0.15);
+  }
+  .stat-shard img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: grayscale(0.6) opacity(0.5);
+  }
+  .stat-shard.selected img { filter: none; }
+  .runes-summary {
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    text-align: center;
+  }
+  .runes-summary strong { color: var(--text-primary); font-weight: 500; }
+
+  /* Effect toggles for runes that affect damage */
+  .effect-toggles {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    margin-top: 10px;
+  }
+  .effect-toggles .et-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-tertiary);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .effect-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+  .effect-row:last-child { margin-bottom: 0; }
+  .effect-row label {
+    cursor: pointer;
+    flex: 1;
+    color: var(--text-secondary);
+  }
+  .effect-row input[type="checkbox"] {
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .effect-row .sub-input {
+    margin-left: 24px;
+    margin-top: 4px;
+  }
 </style>
 </head>
 <body>
+<!-- Floating tooltip used for runes and stat shards -->
+<div id="rune-tooltip" class="rune-tooltip" aria-hidden="true">
+  <div class="rt-name"></div>
+  <div class="rt-short"></div>
+  <div class="rt-long"></div>
+</div>
+
 <div class="container">
-  <h1>StatRift · Riven Damage Calculator</h1>
+  <h1>Antcliff's Riven Damage Calculator</h1>
   <div class="subtitle">Live damage output for Riven combos · patch 26.x · stats verified against the wiki</div>
   <div class="root" id="app"></div>
 </div>
 
 <script>
 // =============================================================================
-// ITEM DATA — verified against wiki.leagueoflegends.com top stat blocks (May 2026)
+// CONFIGURATION
+// =============================================================================
+const VER = '16.9.1';
+const ITEM_ICON = id => `https://ddragon.leagueoflegends.com/cdn/${VER}/img/item/${id}.png`;
+const RUNE_ICON = path => `https://ddragon.leagueoflegends.com/cdn/img/${path}`;
+
+// Riven ability icons from ddragon. Spells live under img/spell/, the passive lives under img/passive/.
+// File names match the internal spell IDs:
+//   Q = Broken Wings        -> RivenTriCleave
+//   W = Ki Burst            -> RivenMartyr
+//   E = Valor               -> RivenFeint  (not in our combos, but kept for completeness)
+//   R = Blade of the Exile  -> RivenFengShuiEngine
+//   Passive = Runic Blade   -> Riven_Passive
+const SPELL_ICON = name => `https://ddragon.leagueoflegends.com/cdn/${VER}/img/spell/${name}.png`;
+const PASSIVE_ICON = name => `https://ddragon.leagueoflegends.com/cdn/${VER}/img/passive/${name}.png`;
+const ABILITY_ICONS = {
+  Q:       SPELL_ICON('RivenTriCleave'),
+  W:       SPELL_ICON('RivenMartyr'),
+  E:       SPELL_ICON('RivenFeint'),
+  R:       SPELL_ICON('RivenFengShuiEngine'),
+  passive: PASSIVE_ICON('Riven_Passive'),
+};
+// Each combo step maps to which icon to show
+const STEP_ICON = {
+  Q1: ABILITY_ICONS.Q,
+  Q2: ABILITY_ICONS.Q,
+  Q3: ABILITY_ICONS.Q,
+  W:  ABILITY_ICONS.W,
+  R1: ABILITY_ICONS.R,
+  R2: ABILITY_ICONS.R,
+  AA_P: ABILITY_ICONS.passive, // auto + passive proc shows the passive icon
+};
+
+// Stat shards icon URL — cdragon serves them under perk-images/StatMods/.
+// Primary: CamelCase by name (e.g. AdaptiveForceIcon)
+const STAT_SHARD_ICON = (id, name) => `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/StatMods/StatMods${name}.png`;
+// Fallback: lowercase folder + lowercase numeric-id filename
+const STAT_SHARD_ICON_FALLBACK = id => `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/statmods/statmods${id}.png`;
+
+// =============================================================================
+// ITEMS — verified stats, patch 26.x
 // =============================================================================
 
-// Riot's official Data Dragon CDN — serves the actual in-game item icons
-const VER = '15.4.1';
-const ICON = id => `https://ddragon.leagueoflegends.com/cdn/${VER}/img/item/${id}.png`;
-
 const ITEMS = {
-  ravenousHydra:  { name: 'Ravenous Hydra',     id: 3074, ad: 65, leth: 0,  penPct: 0,  note: '65 AD · 15 AH · 12% LS' },
-  eclipse:        { name: 'Eclipse',            id: 6692, ad: 60, leth: 0,  penPct: 0,  note: '60 AD · 15 AH' },
-  axiomArc:       { name: 'Axiom Arc',          id: 6695, ad: 55, leth: 10, penPct: 0,  note: '55 AD · 10 leth · 25 AH' },
-  sunderedSky:    { name: 'Sundered Sky',       id: 6610, ad: 45, leth: 0,  penPct: 0,  note: '45 AD · 400 HP · 10 AH' },
-  blackCleaver:   { name: 'Black Cleaver',      id: 3071, ad: 55, leth: 0,  penPct: 0,  note: '55 AD · 400 HP · 20 AH · shred' },
-  seryldas:       { name: "Serylda's Grudge",   id: 6694, ad: 45, leth: 0,  penPct: 30, note: '45 AD · 30% pen · 20 AH' },
-  youmuus:        { name: "Youmuu's Ghostblade",id: 3142, ad: 55, leth: 18, penPct: 0,  note: '55 AD · 18 leth · 4% MS' },
-  deathsDance:    { name: "Death's Dance",      id: 6333, ad: 50, leth: 0,  penPct: 0,  note: '50 AD · 40 armor · 15 AH' },
-  endlessHunger:  { name: 'Endless Hunger',     id: 2517, ad: 65, leth: 0,  penPct: 0,  note: '65 AD · omni · tenacity' },
-  hubris:         { name: 'Hubris',             id: 6697, ad: 60, leth: 18, penPct: 0,  note: '60 AD · 18 leth · 10 AH' },
-  edgeOfNight:    { name: 'Edge of Night',      id: 6035, ad: 50, leth: 10, penPct: 0,  note: '50 AD · 10 leth · 250 HP' },
-  serpentsFang:   { name: "Serpent's Fang",     id: 6675, ad: 55, leth: 15, penPct: 0,  note: '55 AD · 15 leth · anti-shield' },
-  voltaicCyclo:   { name: 'Voltaic Cyclosword', id: 6699, ad: 55, leth: 10, penPct: 0,  note: '55 AD · 10 leth · 10 AH' },
-  umbralGlaive:   { name: 'Umbral Glaive',      id: 3179, ad: 60, leth: 18, penPct: 0,  note: '60 AD · 18 leth · 15 AH' },
-  mortalReminder: { name: 'Mortal Reminder',    id: 3033, ad: 30, leth: 0,  penPct: 35, note: '30 AD · 35% pen · GW' },
-  guardianAngel:  { name: 'Guardian Angel',     id: 3026, ad: 55, leth: 0,  penPct: 0,  note: '55 AD · 45 armor · revive' },
-  mercurialScim:  { name: 'Mercurial Scimitar', id: 3139, ad: 50, leth: 0,  penPct: 0,  note: '50 AD · 35 MR · 10% LS · QSS' },
-  mawOfMalm:      { name: 'Maw of Malmortius',  id: 3156, ad: 60, leth: 0,  penPct: 0,  note: '60 AD · 40 MR · 15 AH · lifeline' },
+  ravenousHydra:  { name: 'Ravenous Hydra',     id: 3074, ad: 65, leth: 0,  penPct: 0,  lifesteal: 12, omnivamp: 0,  note: '65 AD · 15 AH · 12% LS' },
+  eclipse:        { name: 'Eclipse',            id: 6692, ad: 60, leth: 0,  penPct: 0,  lifesteal: 0,  omnivamp: 0,  note: '60 AD · 15 AH' },
+  axiomArc:       { name: 'Axiom Arc',          id: 6696, ad: 55, leth: 10, penPct: 0,  lifesteal: 0,  omnivamp: 0,  note: '55 AD · 10 leth · 25 AH' },
+  sunderedSky:    { name: 'Sundered Sky',       id: 6610, ad: 45, leth: 0,  penPct: 0,  lifesteal: 0,  omnivamp: 0,  note: '45 AD · 400 HP · 10 AH' },
+  blackCleaver:   { name: 'Black Cleaver',      id: 3071, ad: 55, leth: 0,  penPct: 0,  lifesteal: 0,  omnivamp: 0,  note: '55 AD · 400 HP · 20 AH · shred' },
+  seryldas:       { name: "Serylda's Grudge",   id: 6694, ad: 45, leth: 0,  penPct: 30, lifesteal: 0,  omnivamp: 0,  note: '45 AD · 30% pen · 20 AH' },
+  youmuus:        { name: "Youmuu's Ghostblade",id: 3142, ad: 55, leth: 18, penPct: 0,  lifesteal: 0,  omnivamp: 0,  note: '55 AD · 18 leth · 4% MS' },
+  deathsDance:    { name: "Death's Dance",      id: 6333, ad: 50, leth: 0,  penPct: 0,  lifesteal: 0,  omnivamp: 0,  note: '50 AD · 40 armor · 15 AH' },
+  endlessHunger:  { name: 'Endless Hunger',     id: 2517, ad: 65, leth: 0,  penPct: 0,  lifesteal: 0,  omnivamp: 5,  note: '65 AD · 5% omnivamp · 20% tenacity' },
+  hubris:         { name: 'Hubris',             id: 6697, ad: 60, leth: 18, penPct: 0,  lifesteal: 0,  omnivamp: 0,  note: '60 AD · 18 leth · 10 AH' },
+  edgeOfNight:    { name: 'Edge of Night',      id: 3814, ad: 50, leth: 10, penPct: 0,  lifesteal: 0,  omnivamp: 0,  note: '50 AD · 10 leth · 250 HP' },
+  serpentsFang:   { name: "Serpent's Fang",     id: 6695, ad: 55, leth: 15, penPct: 0,  lifesteal: 0,  omnivamp: 0,  note: '55 AD · 15 leth · anti-shield' },
+  voltaicCyclo:   { name: 'Voltaic Cyclosword', id: 6699, ad: 55, leth: 10, penPct: 0,  lifesteal: 0,  omnivamp: 0,  note: '55 AD · 10 leth · 10 AH' },
+  umbralGlaive:   { name: 'Umbral Glaive',      id: 3179, ad: 60, leth: 18, penPct: 0,  lifesteal: 0,  omnivamp: 0,  note: '60 AD · 18 leth · 15 AH' },
+  mortalReminder: { name: 'Mortal Reminder',    id: 3033, ad: 30, leth: 0,  penPct: 35, lifesteal: 0,  omnivamp: 0,  note: '30 AD · 35% pen · GW' },
+  guardianAngel:  { name: 'Guardian Angel',     id: 3026, ad: 55, leth: 0,  penPct: 0,  lifesteal: 0,  omnivamp: 0,  note: '55 AD · 45 armor · revive' },
+  mercurialScim:  { name: 'Mercurial Scimitar', id: 3139, ad: 50, leth: 0,  penPct: 0,  lifesteal: 10, omnivamp: 0,  note: '50 AD · 35 MR · 10% LS · QSS' },
+  mawOfMalm:      { name: 'Maw of Malmortius',  id: 3156, ad: 60, leth: 0,  penPct: 0,  lifesteal: 0,  omnivamp: 0,  note: '60 AD · 40 MR · 15 AH · lifeline' },
 };
 
+// Boots — gluttonGreaves carries omnivamp; rest are non-offensive
 const BOOTS = {
-  platedSteel:    { name: 'Plated Steelcaps',   id: 3047, note: '20 armor · 12% AA dmg reduce' },
-  mercuryTreads:  { name: "Mercury's Treads",   id: 3111, note: '25 MR · 30% tenacity' },
-  gluttonGreaves: { name: 'Gluttonous Greaves', id: 3158, note: '12% omnivamp' },
-  ionianBoots:    { name: 'Ionian Boots',       id: 3158, note: '15 AH' }, // ID 3158 placeholder
+  platedSteel:    { name: 'Plated Steelcaps',         id: 3047, omnivamp: 0, note: '20 armor · 12% AA dmg reduce' },
+  mercuryTreads:  { name: "Mercury's Treads",         id: 3111, omnivamp: 0, note: '25 MR · 30% tenacity' },
+  gluttonGreaves: { name: 'Gluttonous Greaves',       id: 3008, omnivamp: 4, note: '4% omnivamp · +1% per takedown (max 10%)' },
+  ionianBoots:    { name: 'Ionian Boots of Lucidity', id: 3158, omnivamp: 0, note: '15 AH' },
 };
-// Note: Ionian Boots of Lucidity proper ID is 3158 in classic ddragon naming;
-// some recent patches reorganize. Using 3158 for now and will fall back to text if missing.
 
-// Combo definitions
+// =============================================================================
+// COMBOS
+// =============================================================================
 const COMBOS = {
   full:  { label: 'Full combo',  seq: ['R1','Q1','AA_P','Q2','AA_P','Q3','W','AA_P','R2'] },
   short: { label: 'Short trade', seq: ['Q1','AA_P','Q2','W'] },
@@ -378,14 +792,53 @@ const COMBOS = {
   ult2:  { label: 'R2 execute',  seq: ['R1','Q1','AA_P','W','Q2','AA_P','Q3','AA_P','R2'] },
   lane:  { label: 'Lane trade',  seq: ['Q1','W','AA_P','Q2','AA_P'] },
 };
-
 const COLORS = {
   Q1: '#5b8fc4', Q2: '#7baad8', Q3: '#9bc5ec',
-  W:  '#a07a3a', AA_P: '#888780', R1: '#5e5e5e', R2: '#c44a4a'
+  W: '#a07a3a', AA_P: '#888780', R1: '#5e5e5e', R2: '#c44a4a'
 };
 const LABELS = {
   Q1: 'Q1', Q2: 'Q2', Q3: 'Q3', W: 'W',
-  AA_P: 'Auto + passive proc', R1: 'R (ult activate)', R2: 'Wind Slash'
+  AA_P: 'Auto + passive proc', R1: 'R1', R2: 'R2 (Wind Slash)'
+};
+
+// =============================================================================
+// STAT SHARDS — official IDs from Riot's perk system
+// =============================================================================
+// Stat shards - icons hosted on cdragon under perk-images/StatMods/StatMods{Name}Icon.png
+const STAT_SHARDS = {
+  offense: [
+    { id: 5008, name: 'Adaptive Force',  iconName: 'AdaptiveForceIcon',
+      shortDesc: '+9 Adaptive Force',
+      longDesc: 'Grants +9 adaptive force. Gives bonus attack damage or ability power, whichever you have more of (1.8 AD or 3 AP per stack).' },
+    { id: 5005, name: 'Attack Speed',    iconName: 'AttackSpeedIcon',
+      shortDesc: '+10% Attack Speed',
+      longDesc: 'Grants +10% attack speed.' },
+    { id: 5007, name: 'Ability Haste',   iconName: 'CDRScalingIcon',
+      shortDesc: '+8 Ability Haste',
+      longDesc: 'Grants +8 ability haste, reducing your ability cooldowns.' },
+  ],
+  flex: [
+    { id: 5008, name: 'Adaptive Force',  iconName: 'AdaptiveForceIcon',
+      shortDesc: '+9 Adaptive Force',
+      longDesc: 'Grants +9 adaptive force. Gives bonus attack damage or ability power, whichever you have more of (1.8 AD or 3 AP per stack).' },
+    { id: 5010, name: 'Move Speed',      iconName: 'MovementSpeedIcon',
+      shortDesc: '+2.5% Movement Speed',
+      longDesc: 'Grants +2.5% movement speed.' },
+    { id: 5001, name: 'Health Scaling',  iconName: 'HealthScalingIcon',
+      shortDesc: '+10-180 Health (lvl 1-18)',
+      longDesc: 'Grants +10-180 health based on level (scales linearly from level 1 to 18).' },
+  ],
+  defense: [
+    { id: 5011, name: 'Health',          iconName: 'HealthPlusIcon',
+      shortDesc: '+65 Health',
+      longDesc: 'Grants +65 flat health.' },
+    { id: 5013, name: 'Tenacity & Slow Resist', iconName: 'TenacityIcon',
+      shortDesc: '+15% Tenacity and Slow Resist',
+      longDesc: 'Grants +15% tenacity and +15% slow resist. Tenacity reduces the duration of crowd control effects.' },
+    { id: 5001, name: 'Health Scaling',  iconName: 'HealthScalingIcon',
+      shortDesc: '+10-180 Health (lvl 1-18)',
+      longDesc: 'Grants +10-180 health based on level (scales linearly from level 1 to 18).' },
+  ],
 };
 
 const ITEM_LIMIT = 6;
@@ -402,8 +855,25 @@ const S = {
   qRank: 3, wRank: 3, rRank: 2,
   bcStacks: 6,
   target: { armor: 70, hp: 2000 },
-  runes: { conqueror: false, conquStacks: 12, lastStand: false, lsHpPct: 30 },
   windMissingPct: 30,
+  gluttonStacks: 0, // Gluttonous Greaves takedown stacks (0-6, +1% omnivamp each)
+  // Riven's own HP — used by Sundered Sky proc heal (scales with missing HP)
+  // and Triumph rune heal-on-takedown.
+  rivenMaxHp: 2200,
+  rivenMissingPct: 40,
+  // Runes
+  runeData: null, // loaded from ddragon
+  runeLoadError: false,
+  shardIcons: {}, // map of shard id -> icon URL (loaded from cdragon perks.json)
+  primaryTreeId: 8000,    // Precision (Riven's standard)
+  secondaryTreeId: 8100,  // Domination
+  keystoneId: 8010,       // Conqueror
+  primarySlots: [],       // [slot1Id, slot2Id, slot3Id]
+  secondarySlots: [],     // [pick1, pick2] from secondary tree
+  shards: [5008, 5008, 5011], // offense, flex, defense
+  // Effects (which rune effects to actually apply to damage calc)
+  conqueror: { active: true, stacks: 12 }, // Conqueror is keystone by default
+  lastStand: { active: false, hpPct: 30 },
 };
 
 function selectedCount() {
@@ -411,10 +881,117 @@ function selectedCount() {
 }
 
 // =============================================================================
+// RUNE DATA LOADING
+// =============================================================================
+
+// Tree IDs in the same left-to-right order as Riot's client
+const TREE_ORDER = [8000, 8100, 8200, 8400, 8300]; // Precision, Domination, Sorcery, Resolve, Inspiration
+
+// Fetch the cdragon perks.json — contains every perk (runes + stat shards) with
+// official iconPath. We use this to get the *actual* shard icon URLs instead of
+// guessing the filename pattern.
+async function loadShardIcons() {
+  try {
+    const res = await fetch('https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perks.json');
+    if (!res.ok) throw new Error('shard icons fetch failed');
+    const perks = await res.json();
+    const map = {};
+    for (const perk of perks) {
+      if (!perk || !perk.iconPath) continue;
+      // Convert LCU asset path "/lol-game-data/assets/v1/perk-images/..." to the cdragon raw URL
+      // Lowercase and prepend the cdragon path. cdragon serves these case-insensitively.
+      const lcuPath = perk.iconPath.toLowerCase();
+      const fixed = lcuPath.replace(/^\/lol-game-data\/assets\//, '');
+      map[perk.id] = `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/${fixed}`;
+    }
+    S.shardIcons = map;
+    render();
+  } catch (e) {
+    console.warn('Could not load cdragon perks.json for shard icons; falling back to hardcoded paths.', e);
+    // Not fatal — shard icons will fall back to the hardcoded URL pattern in STAT_SHARD_ICON
+  }
+}
+
+async function loadRuneData() {
+  try {
+    const res = await fetch(`https://ddragon.leagueoflegends.com/cdn/${VER}/data/en_US/runesReforged.json`);
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+    // Reorder trees to match the client (Precision, Domination, Sorcery, Resolve, Inspiration)
+    S.runeData = TREE_ORDER
+      .map(id => data.find(t => t.id === id))
+      .filter(Boolean)
+      .concat(data.filter(t => !TREE_ORDER.includes(t.id))); // append any unknown trees just in case
+    // Initialize default selections so a valid page exists
+    initDefaultRunes();
+    render();
+  } catch (e) {
+    console.error('Failed to load rune data', e);
+    S.runeLoadError = true;
+    render();
+  }
+}
+
+function getTree(id) {
+  return S.runeData?.find(t => t.id === id);
+}
+
+function initDefaultRunes() {
+  const primary = getTree(S.primaryTreeId);
+  const secondary = getTree(S.secondaryTreeId);
+  if (!primary || !secondary) return;
+
+  // Primary: keystone is slot 0; lesser runes are slots 1, 2, 3
+  // Pick first option from each lesser slot by default
+  S.keystoneId = 8010; // Conqueror
+  S.primarySlots = [
+    primary.slots[1].runes[0].id, // slot 1
+    primary.slots[2].runes[0].id, // slot 2
+    primary.slots[3].runes[0].id, // slot 3
+  ];
+  // Secondary: pick 2 lesser runes from any 2 of slots 1,2,3
+  S.secondarySlots = [
+    secondary.slots[1].runes[0].id,
+    secondary.slots[2].runes[0].id,
+  ];
+
+  // Sync the conqueror toggle if it's the keystone
+  S.conqueror.active = (S.keystoneId === 8010);
+  S.lastStand.active = S.primarySlots.includes(8299); // Last Stand id
+}
+
+function getKeystoneOptions(treeId) {
+  const tree = getTree(treeId);
+  if (!tree) return [];
+  return tree.slots[0].runes;
+}
+
+function getRuneNameById(id) {
+  if (!S.runeData) return '';
+  for (const tree of S.runeData) {
+    for (const slot of tree.slots) {
+      const rune = slot.runes.find(r => r.id === id);
+      if (rune) return rune.name;
+    }
+  }
+  return '';
+}
+
+// =============================================================================
 // DAMAGE CALCULATIONS
 // =============================================================================
 
 function rivenBaseAD(l) { return 56 + 3 * (l - 1); }
+
+// Compute adaptive force from offense/flex shards (Riven uses AD)
+function adaptiveFromShards() {
+  let ad = 0;
+  // Offense slot
+  if (S.shards[0] === 5008) ad += 9; // adaptive
+  // Flex slot
+  if (S.shards[1] === 5008) ad += 9; // adaptive
+  return ad;
+}
 
 function computeStats() {
   const l = S.level;
@@ -431,10 +1008,18 @@ function computeStats() {
     }
   }
 
-  let bonusAD = itemAD;
-  if (S.runes.conqueror) {
-    const stacks = Math.min(S.runes.conquStacks, 12);
-    bonusAD *= (1 + (stacks / 12) * 0.15);
+  // Adaptive force from shards adds to flat AD (treated as bonus AD)
+  const shardAD = adaptiveFromShards();
+
+  let bonusAD = itemAD + shardAD;
+
+  // Conqueror: only active if it's the keystone AND user toggled it on
+  if (S.conqueror.active && S.keystoneId === 8010) {
+    const stacks = Math.min(S.conqueror.stacks, 12);
+    // Conqueror grants 10-35 (level scaling) bonus AD at full stacks (current patch)
+    // 10 at lv 1, 35 at lv 18 — linear
+    const conqAD = 10 + (35 - 10) * (l - 1) / 17;
+    bonusAD += conqAD * (stacks / 12);
   }
 
   // R1 (Blade of the Exile): +25% total AD
@@ -463,21 +1048,17 @@ function calcAll() {
   const { bonusAD, totalAD } = stats;
   const l = S.level;
 
-  // Q (Broken Wings): rank-based base + bonus AD ratio, per cast
   const qi = S.qRank - 1;
   const qBase = [45, 75, 105, 135, 165];
   const qRat  = [0.60, 0.65, 0.70, 0.75, 0.80];
   const Q = (qBase[qi] + qRat[qi] * bonusAD) * m;
 
-  // W (Ki Burst): base + 100% bonus AD
   const wBase = [65, 95, 125, 155, 185];
   const W = (wBase[S.wRank - 1] + bonusAD) * m;
 
-  // Passive (Runic Blade): 30%-50% total AD scaling linearly with level
   const passivePct = (30 + 20 * (l - 1) / 17) / 100;
   const AA_P = (totalAD * (1 + passivePct)) * m;
 
-  // R2 (Wind Slash): scales 0-200% by target missing HP
   const wMin = [100, 150, 200], wMax = [300, 450, 600];
   const ri = S.rRank - 1;
   const wn = wMin[ri] + 0.60 * bonusAD;
@@ -485,11 +1066,16 @@ function calcAll() {
   const mp = Math.min(1, Math.max(0, S.windMissingPct / 100));
   const R2 = (wn + (wx - wn) * mp) * m;
 
-  // Last Stand: up to +11% damage at low HP
+  // Last Stand: up to +11% damage at low HP, only active if it's selected
   let lsM = 1;
-  if (S.runes.lastStand && S.runes.lsHpPct < 75) {
-    lsM = 1 + 0.11 * (1 - S.runes.lsHpPct / 75);
+  const hasLastStand = S.primarySlots.includes(8299);
+  if (hasLastStand && S.lastStand.active && S.lastStand.hpPct < 60) {
+    lsM = 1 + 0.11 * (1 - S.lastStand.hpPct / 60);
   }
+
+  // Coup de Grace: +8% damage to enemies below 40% HP
+  // Cut Down: +5-15% damage to enemies with more max HP than you
+  // (these would be more complex; left out for now since they need target HP context)
 
   const raw = { Q1: Q, Q2: Q, Q3: Q, W, AA_P, R1: 0, R2 };
   const out = {};
@@ -499,16 +1085,325 @@ function calcAll() {
 }
 
 // =============================================================================
-// RENDERING
+// HEALING — combines lifesteal/omnivamp from items + Sundered Sky proc + Triumph
+// =============================================================================
+//
+// Riven-specific rules:
+//   - Lifesteal heals from auto-attack damage (the AA portion of AA_P), but NOT
+//     from her abilities. The passive proc rides the auto so it counts.
+//   - Omnivamp heals from ALL damage dealt — abilities (Q/W/R) and autos alike.
+//   - Both stack additively across items.
+//   - Gluttonous Greaves takedown stacks (4% base + up to 6 stacks of 1%) are
+//     handled via a "takedownStacks" state input the user controls.
+//
+// Sundered Sky proc:
+//   - One Lightshield Strike per combo on a single target (10s per-target
+//     cooldown means it realistically procs exactly once).
+//   - Heals: 100% base AD (melee) + 6% of Riven's missing HP.
+//   - Triggers on the basic attack; if the combo includes an auto, it fires.
+//
+// Triumph rune (only if the combo would kill the target — i.e. one-shot):
+//   - Heals: 2.5% of Riven's max HP + 5% of her missing HP, on takedown.
+//   - Only counts if the rune is selected (primary or secondary) AND the combo
+//     deals enough damage to one-shot the target.
+
+// Returns true if rune `id` is currently equipped in either primary or secondary slots.
+function isRuneEquipped(id) {
+  if (S.keystoneId === id) return true;
+  if (S.primarySlots.includes(id)) return true;
+  if (S.secondarySlots.includes(id)) return true;
+  return false;
+}
+
+function calcHealing(out, totalDamage, willOneShot) {
+  // ---- Lifesteal + Omnivamp from items ----
+  let lifestealPct = 0;
+  let omnivampPct = 0;
+
+  Object.entries(S.items).forEach(([key, isOn]) => {
+    if (!isOn) return;
+    const it = ITEMS[key];
+    if (!it) return;
+    lifestealPct += it.lifesteal || 0;
+    omnivampPct  += it.omnivamp  || 0;
+  });
+
+  if (S.boot) {
+    const boot = BOOTS[S.boot];
+    if (boot) {
+      lifestealPct += boot.lifesteal || 0;
+      omnivampPct  += boot.omnivamp  || 0;
+      if (S.boot === 'gluttonGreaves') {
+        omnivampPct += Math.max(0, Math.min(6, S.gluttonStacks || 0));
+      }
+    }
+  }
+
+  const autoDmg = out.AA_P || 0;
+  const lifestealHeal = autoDmg * (lifestealPct / 100);
+  const omnivampHeal = totalDamage * (omnivampPct / 100);
+
+  // ---- Sundered Sky / Lightshield Strike proc ----
+  // Riven's base AD at the current level (item AD doesn't count for this scaling)
+  const baseAD = 56 + 3 * (S.level - 1);
+  const rivenMissingHp = S.rivenMaxHp * (S.rivenMissingPct / 100);
+  let sunderedSkyHeal = 0;
+  if (S.items.sunderedSky) {
+    // Melee: 100% base AD + 6% of missing health, fires once per combo
+    sunderedSkyHeal = (1.00 * baseAD) + (0.06 * rivenMissingHp);
+  }
+
+  // ---- Triumph (Precision slot 1, id 9111) ----
+  // Only counts if the combo would secure a takedown.
+  let triumphHeal = 0;
+  const hasTriumph = isRuneEquipped(9111);
+  if (hasTriumph && willOneShot) {
+    triumphHeal = (0.025 * S.rivenMaxHp) + (0.05 * rivenMissingHp);
+  }
+
+  return {
+    lifestealPct,
+    omnivampPct,
+    lifestealHeal: Math.round(lifestealHeal),
+    omnivampHeal:  Math.round(omnivampHeal),
+    sunderedSkyHeal: Math.round(sunderedSkyHeal),
+    triumphHeal:     Math.round(triumphHeal),
+    hasTriumph,
+    triumphActive: hasTriumph && willOneShot,
+    totalHeal: Math.round(lifestealHeal + omnivampHeal + sunderedSkyHeal + triumphHeal),
+  };
+}
+
+// =============================================================================
+// RENDER HELPERS
 // =============================================================================
 
 function makeIconHTML(it, name) {
   const fallback = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  return `<img class="item-icon" src="${ICON(it.id)}" alt="${name}" loading="lazy"
+  return `<img class="item-icon" src="${ITEM_ICON(it.id)}" alt="${name}" loading="lazy"
     onerror="this.outerHTML='<div class=\\'item-icon-fallback\\'>${fallback}</div>'">`;
 }
 
+function makeRuneIcon(rune, size, selected) {
+  const cls = size === 'keystone' ? 'rune-pick keystone' : 'rune-pick';
+  return `<img src="${RUNE_ICON(rune.icon)}" alt="${rune.name}" loading="lazy">`;
+}
+
+// Riot's runesReforged.json embeds rich HTML markup in longDesc and shortDesc
+// (e.g. <lol-uikit-tooltipped-keyword>, <font color>). Strip and clean for our tooltip.
+function cleanRuneDesc(html) {
+  if (!html) return '';
+  // Remove all HTML tags, keep their inner text
+  let text = html.replace(/<[^>]+>/g, '');
+  // Decode common entities
+  text = text.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  // Collapse multiple whitespace
+  text = text.replace(/\s+/g, ' ').trim();
+  return text;
+}
+
+// Encode a string safely for use inside an HTML attribute (single-quoted onmouseenter='...')
+function attrEsc(s) {
+  return (s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+}
+
+// =============================================================================
+// RUNE PANEL RENDER
+// =============================================================================
+
+function renderRunePanel() {
+  if (S.runeLoadError) {
+    return `<div class="rune-loading">Couldn't load rune data from Riot's CDN. The rest of the calculator still works — your previous build damage will be calculated without rune effects.</div>`;
+  }
+  if (!S.runeData) {
+    return `<div class="rune-loading">Loading runes from Riot's CDN…</div>`;
+  }
+
+  const primary = getTree(S.primaryTreeId);
+  const secondary = getTree(S.secondaryTreeId);
+
+  // Tree tabs
+  const primaryTabs = S.runeData.map(tree => {
+    const isPri = tree.id === S.primaryTreeId;
+    return `<div class="rune-tree-tab ${isPri ? 'active' : ''}" onclick="setPrimaryTree(${tree.id})">
+      <img src="${RUNE_ICON(tree.icon)}" alt="${tree.name}">
+      <span class="name">${tree.name}</span>
+    </div>`;
+  }).join('');
+
+  const secondaryTabs = S.runeData
+    .filter(tree => tree.id !== S.primaryTreeId)
+    .map(tree => {
+      const isSec = tree.id === S.secondaryTreeId;
+      return `<div class="rune-tree-tab secondary ${isSec ? 'active' : ''}"
+        onclick="setSecondaryTree(${tree.id})">
+        <img src="${RUNE_ICON(tree.icon)}" alt="${tree.name}">
+        <span class="name">${tree.name}</span>
+      </div>`;
+    }).join('');
+
+  // Primary tree slots
+  let primaryHTML = '';
+  if (primary) {
+    primary.slots.forEach((slot, idx) => {
+      const isKeystone = idx === 0;
+      const sectionLabel = isKeystone ? 'Keystone' :
+                           idx === 1 ? 'Slot 1' :
+                           idx === 2 ? 'Slot 2' : 'Slot 3';
+      primaryHTML += `<div class="rune-section-label">${sectionLabel}</div>`;
+      primaryHTML += `<div class="rune-slot ${isKeystone ? 'keystone-slot' : ''}">`;
+      slot.runes.forEach(rune => {
+        const isSelected = isKeystone
+          ? rune.id === S.keystoneId
+          : S.primarySlots[idx - 1] === rune.id;
+        const tipName = attrEsc(rune.name);
+        const tipShort = attrEsc(cleanRuneDesc(rune.shortDesc));
+        const tipLong = attrEsc(cleanRuneDesc(rune.longDesc));
+        primaryHTML += `<button class="rune-pick ${isKeystone ? 'keystone' : ''} ${isSelected ? 'selected' : ''}"
+          onclick="${isKeystone ? `setKeystone(${rune.id})` : `setPrimarySlot(${idx - 1}, ${rune.id})`}"
+          onmouseenter="showTooltip(event, '${tipName}', '${tipShort}', '${tipLong}')"
+          onmouseleave="hideTooltip()">
+          <img src="${RUNE_ICON(rune.icon)}" alt="${rune.name}">
+        </button>`;
+      });
+      primaryHTML += `</div>`;
+    });
+  }
+
+  // Secondary tree: pick 2 from slots 1, 2, 3 (no keystone)
+  let secondaryHTML = '';
+  if (secondary) {
+    secondaryHTML += `<div class="rune-section-label">Secondary path · pick 2</div>`;
+    for (let idx = 1; idx <= 3; idx++) {
+      const slot = secondary.slots[idx];
+      secondaryHTML += `<div class="rune-slot">`;
+      slot.runes.forEach(rune => {
+        const isSelected = S.secondarySlots.includes(rune.id);
+        const tipName = attrEsc(rune.name);
+        const tipShort = attrEsc(cleanRuneDesc(rune.shortDesc));
+        const tipLong = attrEsc(cleanRuneDesc(rune.longDesc));
+        secondaryHTML += `<button class="rune-pick ${isSelected ? 'selected' : ''}"
+          onclick="toggleSecondaryRune(${rune.id})"
+          onmouseenter="showTooltip(event, '${tipName}', '${tipShort}', '${tipLong}')"
+          onmouseleave="hideTooltip()">
+          <img src="${RUNE_ICON(rune.icon)}" alt="${rune.name}">
+        </button>`;
+      });
+      secondaryHTML += `</div>`;
+    }
+  }
+
+  // Stat shards
+  let shardsHTML = `<div class="rune-section-label">Stat shards</div>`;
+  ['offense', 'flex', 'defense'].forEach((row, rowIdx) => {
+    shardsHTML += `<div class="stat-shards-row">`;
+    STAT_SHARDS[row].forEach(shard => {
+      const isSelected = S.shards[rowIdx] === shard.id;
+      const tipName = shard.name.replace(/"/g, '&quot;');
+      const tipShort = shard.shortDesc.replace(/"/g, '&quot;');
+      const tipLong = shard.longDesc.replace(/"/g, '&quot;');
+      // Prefer the URL we discovered from cdragon perks.json — it's authoritative.
+      // If perks.json hasn't loaded yet (or doesn't include this shard), fall back to
+      // hardcoded patterns. The onerror handler walks through alternates before giving up.
+      const dynamicUrl = S.shardIcons[shard.id] || '';
+      const namedUrl = STAT_SHARD_ICON(shard.id, shard.iconName);
+      const fallbackUrl = STAT_SHARD_ICON_FALLBACK(shard.id);
+      const primaryUrl = dynamicUrl || namedUrl;
+      shardsHTML += `<button class="stat-shard ${isSelected ? 'selected' : ''}"
+        onclick="setShard(${rowIdx}, ${shard.id})"
+        onmouseenter="showTooltip(event, '${tipName}', '${tipShort}', '${tipLong}')"
+        onmouseleave="hideTooltip()">
+        <img src="${primaryUrl}" alt="${shard.name}"
+          data-alt1="${namedUrl}" data-alt2="${fallbackUrl}"
+          onerror="shardIconFallback(this)">
+      </button>`;
+    });
+    shardsHTML += `</div>`;
+  });
+
+  // Effect toggles for damage-affecting runes
+  const hasConqueror = S.keystoneId === 8010;
+  const hasLastStand = S.primarySlots.includes(8299);
+  let effectsHTML = '';
+  if (hasConqueror || hasLastStand) {
+    effectsHTML = `<div class="effect-toggles">
+      <div class="et-title">Apply rune effects to damage</div>`;
+    if (hasConqueror) {
+      effectsHTML += `<div class="effect-row">
+        <input type="checkbox" id="conq-active" ${S.conqueror.active ? 'checked' : ''} onchange="S.conqueror.active=this.checked;render()">
+        <label for="conq-active">Conqueror active</label>
+      </div>`;
+      if (S.conqueror.active) {
+        effectsHTML += `<div class="field sub-input">
+          <label>Stacks</label>
+          <div class="field-row">
+            <input type="range" min="0" max="12" step="1" value="${S.conqueror.stacks}" oninput="S.conqueror.stacks=+this.value;render()">
+            <span class="val" id="val-conqStacks">${S.conqueror.stacks}/12</span>
+          </div>
+        </div>`;
+      }
+    }
+    if (hasLastStand) {
+      effectsHTML += `<div class="effect-row">
+        <input type="checkbox" id="ls-active" ${S.lastStand.active ? 'checked' : ''} onchange="S.lastStand.active=this.checked;render()">
+        <label for="ls-active">Last Stand active</label>
+      </div>`;
+      if (S.lastStand.active) {
+        effectsHTML += `<div class="field sub-input">
+          <label>Your current HP %</label>
+          <div class="field-row">
+            <input type="range" min="0" max="100" step="1" value="${S.lastStand.hpPct}" oninput="S.lastStand.hpPct=+this.value;render()">
+            <span class="val" id="val-lsHpPct">${S.lastStand.hpPct}%</span>
+          </div>
+        </div>`;
+      }
+    }
+    effectsHTML += `</div>`;
+  }
+
+  // Summary line
+  const keystoneName = getRuneNameById(S.keystoneId);
+  const primaryName = primary?.name || '';
+  const secondaryName = secondary?.name || '';
+  const summary = `<div class="runes-summary">
+    <strong>${primaryName}</strong> · ${keystoneName} · <strong>${secondaryName}</strong> secondary
+  </div>`;
+
+  return `
+    <div class="runes-two-col">
+      <div class="runes-col-primary">
+        <div class="rune-section-label">Primary path</div>
+        <div class="rune-tree-tabs">${primaryTabs}</div>
+        ${primaryHTML}
+      </div>
+      <div class="runes-col-secondary">
+        <div class="rune-section-label">Secondary path</div>
+        <div class="rune-tree-tabs">${secondaryTabs}</div>
+        ${secondaryHTML}
+        ${shardsHTML}
+        ${effectsHTML}
+      </div>
+    </div>
+    ${summary}
+  `;
+}
+
+// =============================================================================
+// MAIN RENDER
+// =============================================================================
+
 function render() {
+  // Hide any open tooltip — if a button is being clicked, the underlying button gets
+  // destroyed during render and we'd otherwise leak a "stuck" tooltip on screen
+  hideTooltip();
+
+  // If a slider is currently being dragged, skip the full DOM rebuild — it would
+  // destroy the slider element mid-drag and break the gesture. Instead, do a
+  // light "update displayed values" pass.
+  if (window._sliderDragging) {
+    updateLiveDisplays();
+    return;
+  }
   const { out, stats, ea } = calcAll();
   const combo = COMBOS[S.combo].seq;
   let total = 0;
@@ -535,16 +1430,16 @@ function render() {
           <div class="field-row">
             <input type="range" min="1" max="18" step="1" value="${S.level}"
               oninput="upd('level', +this.value)">
-            <span class="val">${S.level}</span>
+            <span class="val" id="val-level">${S.level}</span>
           </div>
         </div>
         <div class="computed-row">
-          <div class="comp-card"><div class="cv">${Math.round(stats.totalAD)}</div><div class="cl">Total AD (w/ R)</div></div>
-          <div class="comp-card"><div class="cv">${Math.round(stats.bonusAD)}</div><div class="cl">Bonus AD</div></div>
-          <div class="comp-card"><div class="cv">${stats.leth}</div><div class="cl">Lethality</div></div>
-          <div class="comp-card"><div class="cv">${Math.round(stats.flatPen)}</div><div class="cl">Flat pen</div></div>
-          <div class="comp-card"><div class="cv">${stats.penPct.toFixed(1)}%</div><div class="cl">% armor pen</div></div>
-          <div class="comp-card"><div class="cv">${Math.round(stats.baseAD)}</div><div class="cl">Base AD</div></div>
+          <div class="comp-card"><div class="cv" id="stat-totalAD">${Math.round(stats.totalAD)}</div><div class="cl">Total AD (w/ R)</div></div>
+          <div class="comp-card"><div class="cv" id="stat-bonusAD">${Math.round(stats.bonusAD)}</div><div class="cl">Bonus AD</div></div>
+          <div class="comp-card"><div class="cv" id="stat-leth">${stats.leth}</div><div class="cl">Lethality</div></div>
+          <div class="comp-card"><div class="cv" id="stat-flatPen">${Math.round(stats.flatPen)}</div><div class="cl">Flat pen</div></div>
+          <div class="comp-card"><div class="cv" id="stat-penPct">${stats.penPct.toFixed(1)}%</div><div class="cl">% armor pen</div></div>
+          <div class="comp-card"><div class="cv" id="stat-baseAD">${Math.round(stats.baseAD)}</div><div class="cl">Base AD</div></div>
         </div>
 
         <div class="sec">Boots</div>
@@ -576,53 +1471,17 @@ function render() {
             <label>BC stacks (armor shred)</label>
             <div class="field-row">
               <input type="range" min="0" max="6" step="1" value="${S.bcStacks}" oninput="upd('bcStacks', +this.value)">
-              <span class="val">${S.bcStacks}/6</span>
+              <span class="val" id="val-bcStacks">${S.bcStacks}/6</span>
             </div>
           </div>` : ''}
-      </div>
-
-      <div class="panel">
-        <div class="sec">Runes</div>
-        <div class="toggle-row">
-          <button class="tog ${S.runes.conqueror ? 'on' : ''}" onclick="togR('conqueror')">Conqueror</button>
-          <button class="tog ${S.runes.lastStand ? 'on' : ''}" onclick="togR('lastStand')">Last Stand</button>
-        </div>
-        ${S.runes.conqueror ? `
-          <div class="field"><label>Conqueror stacks</label>
+        ${S.boot === 'gluttonGreaves' ? `
+          <div class="field" style="margin-top: 10px">
+            <label>Gluttonous Greaves takedown stacks</label>
             <div class="field-row">
-              <input type="range" min="0" max="12" step="1" value="${S.runes.conquStacks}" oninput="upd('runes.conquStacks', +this.value)">
-              <span class="val">${S.runes.conquStacks}/12</span>
+              <input type="range" min="0" max="6" step="1" value="${S.gluttonStacks}" oninput="upd('gluttonStacks', +this.value)">
+              <span class="val" id="val-gluttonStacks">${S.gluttonStacks}/6</span>
             </div>
           </div>` : ''}
-        ${S.runes.lastStand ? `
-          <div class="field"><label>Your HP %</label>
-            <div class="field-row">
-              <input type="range" min="0" max="100" step="1" value="${S.runes.lsHpPct}" oninput="upd('runes.lsHpPct', +this.value)">
-              <span class="val">${S.runes.lsHpPct}%</span>
-            </div>
-          </div>` : ''}
-      </div>
-
-      <div class="panel">
-        <div class="sec">Ability ranks</div>
-        <div class="field"><label>Q rank</label>
-          <div class="field-row">
-            <input type="range" min="1" max="5" step="1" value="${S.qRank}" oninput="upd('qRank', +this.value)">
-            <span class="val">${S.qRank}</span>
-          </div>
-        </div>
-        <div class="field"><label>W rank</label>
-          <div class="field-row">
-            <input type="range" min="1" max="5" step="1" value="${S.wRank}" oninput="upd('wRank', +this.value)">
-            <span class="val">${S.wRank}</span>
-          </div>
-        </div>
-        <div class="field"><label>R rank</label>
-          <div class="field-row">
-            <input type="range" min="1" max="2" step="1" value="${S.rRank}" oninput="upd('rRank', +this.value)">
-            <span class="val">${S.rRank}</span>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -630,17 +1489,69 @@ function render() {
       <div class="panel">
         <div class="sec">Target</div>
         <div class="field">
-          <label>Armor <span style="font-weight: 400; color: var(--text-tertiary)">(effective after pen: ${eff})</span></label>
+          <label>Armor <span style="font-weight: 400; color: var(--text-tertiary)">(effective after pen: <span id="eff-armor-display">${eff}</span>)</span></label>
           <div class="field-row">
             <input type="range" min="0" max="400" step="1" value="${S.target.armor}" oninput="upd('target.armor', +this.value)">
-            <span class="val">${S.target.armor}</span>
+            <span class="val" id="val-armor">${S.target.armor}</span>
           </div>
         </div>
         <div class="field">
           <label>Max HP</label>
           <div class="field-row">
             <input type="range" min="500" max="6000" step="50" value="${S.target.hp}" oninput="upd('target.hp', +this.value)">
-            <span class="val">${S.target.hp.toLocaleString()}</span>
+            <span class="val" id="val-hp">${S.target.hp.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+
+      ${(S.items.sunderedSky || isRuneEquipped(9111)) ? `
+      <div class="panel">
+        <div class="sec">Your stats <span style="font-weight: 400; font-size: 11px; color: var(--text-tertiary); text-transform: none; letter-spacing: 0">(for Sundered Sky / Triumph healing)</span></div>
+        <div class="field">
+          <label>Your max HP</label>
+          <div class="field-row">
+            <input type="range" min="600" max="4500" step="25" value="${S.rivenMaxHp}" oninput="upd('rivenMaxHp', +this.value)">
+            <span class="val" id="val-rivenMaxHp">${S.rivenMaxHp.toLocaleString()}</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Your missing HP % <span style="font-weight: 400; color: var(--text-tertiary)">(scales heal amounts)</span></label>
+          <div class="field-row">
+            <input type="range" min="0" max="100" step="1" value="${S.rivenMissingPct}" oninput="upd('rivenMissingPct', +this.value)">
+            <span class="val" id="val-rivenMissingPct">${S.rivenMissingPct}%</span>
+          </div>
+        </div>
+      </div>` : ''}
+
+      <div class="panel">
+        <div class="sec">Ability ranks</div>
+        <div class="ranks-row">
+          <div class="rank-pick">
+            <span class="rank-icon-wrap">
+              <img class="rank-ability-icon" src="${ABILITY_ICONS.Q}" alt="Broken Wings (Q)" title="Q · Broken Wings">
+              <span class="rank-key-overlay">Q</span>
+            </span>
+            <div class="rank-btn-row">
+              ${[1,2,3,4,5].map(n => `<button class="rank-btn ${S.qRank===n?'active':''}" onclick="upd('qRank',${n})">${n}</button>`).join('')}
+            </div>
+          </div>
+          <div class="rank-pick">
+            <span class="rank-icon-wrap">
+              <img class="rank-ability-icon" src="${ABILITY_ICONS.W}" alt="Ki Burst (W)" title="W · Ki Burst">
+              <span class="rank-key-overlay">W</span>
+            </span>
+            <div class="rank-btn-row">
+              ${[1,2,3,4,5].map(n => `<button class="rank-btn ${S.wRank===n?'active':''}" onclick="upd('wRank',${n})">${n}</button>`).join('')}
+            </div>
+          </div>
+          <div class="rank-pick">
+            <span class="rank-icon-wrap">
+              <img class="rank-ability-icon" src="${ABILITY_ICONS.R}" alt="Blade of the Exile (R)" title="R · Blade of the Exile">
+              <span class="rank-key-overlay">R</span>
+            </span>
+            <div class="rank-btn-row">
+              ${[1,2,3].map(n => `<button class="rank-btn ${S.rRank===n?'active':''}" onclick="upd('rRank',${n})">${n}</button>`).join('')}
+            </div>
           </div>
         </div>
       </div>
@@ -655,10 +1566,10 @@ function render() {
         <div class="seq-lbl">${COMBOS[S.combo].seq.map(s => LABELS[s] || s).join(' → ')}</div>
         ${(S.combo === 'ult2' || S.combo === 'full') ? `
           <div class="field">
-            <label>Target missing HP % (Wind Slash scaling)</label>
+            <label>Target missing HP % (R2 / Wind Slash scaling)</label>
             <div class="field-row">
               <input type="range" min="0" max="100" step="1" value="${S.windMissingPct}" oninput="upd('windMissingPct', +this.value)">
-              <span class="val">${S.windMissingPct}%</span>
+              <span class="val" id="val-windMissingPct">${S.windMissingPct}%</span>
             </div>
           </div>` : ''}
       </div>
@@ -666,29 +1577,97 @@ function render() {
       <div class="panel">
         <div class="sec">Damage output</div>
         <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px">
-          <span class="total">${total.toLocaleString()}</span>
+          <span class="total" id="dmg-total">${total.toLocaleString()}</span>
           <span style="font-size: 14px; color: var(--text-secondary)">damage</span>
           ${hpPct >= 100 ? '<span class="one-shot-pill">one shots</span>' : ''}
         </div>
         <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px">
-          ${Math.min(hpPct, 100)}% of ${S.target.hp.toLocaleString()} HP
+          <span id="dmg-pctOfHp">${Math.min(hpPct, 100)}</span>% of <span id="dmg-hpTotal">${S.target.hp.toLocaleString()}</span> HP
         </div>
         <div class="pct-bar">
-          <div class="pct-fill" style="width: ${Math.min(hpPct, 100)}%; background: ${hpPct >= 100 ? 'var(--accent-red)' : 'var(--accent)'}"></div>
+          <div class="pct-fill" id="hp-coverage-bar" style="width: ${Math.min(hpPct, 100)}%; background: ${hpPct >= 100 ? 'var(--accent-red)' : 'var(--accent)'}"></div>
         </div>
-        ${disp.map(({ k, v }) => `
+        ${disp.map(({ k, v }) => {
+          const iconUrl = STEP_ICON[k];
+          const iconHtml = iconUrl
+            ? `<img class="dmg-icon" src="${iconUrl}" alt="" onerror="this.style.display='none'">`
+            : '<span class="dmg-icon-placeholder"></span>';
+          return `
           <div class="dmg-line">
-            <div class="dmg-lbl"><span>${LABELS[k] || k}</span><span>${v.toLocaleString()}</span></div>
-            <div class="bar-track"><div class="bar-fill" style="width: ${Math.round(v / maxDmg * 100)}%; background: ${COLORS[k] || '#888'}"></div></div>
-          </div>
-        `).join('')}
+            <div class="dmg-lbl">
+              <span class="dmg-lbl-left">${iconHtml}<span>${LABELS[k] || k}</span></span>
+              <span id="dmg-${k}">${v.toLocaleString()}</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" id="bar-${k}" style="width: ${Math.round(v / maxDmg * 100)}%; background: ${COLORS[k] || '#888'}"></div></div>
+          </div>`;
+        }).join('')}
+
+        ${(() => {
+          const willOneShot = hpPct >= 100;
+          const heal = calcHealing(out, total, willOneShot);
+          // Skip the panel entirely if no healing is on the build
+          const hasAnyHeal =
+            heal.lifestealPct > 0 ||
+            heal.omnivampPct > 0 ||
+            heal.sunderedSkyHeal > 0 ||
+            heal.triumphActive;
+          if (!hasAnyHeal) return '';
+
+          const breakdown = [];
+          if (heal.lifestealPct > 0) {
+            breakdown.push(`<div class="heal-line">
+              <span class="heal-lbl">Lifesteal (${heal.lifestealPct}% of auto dmg)</span>
+              <span class="heal-val" id="heal-lifesteal">${heal.lifestealHeal.toLocaleString()}</span>
+            </div>`);
+          }
+          if (heal.omnivampPct > 0) {
+            breakdown.push(`<div class="heal-line">
+              <span class="heal-lbl">Omnivamp (${heal.omnivampPct}% of all dmg)</span>
+              <span class="heal-val" id="heal-omnivamp">${heal.omnivampHeal.toLocaleString()}</span>
+            </div>`);
+          }
+          if (heal.sunderedSkyHeal > 0) {
+            breakdown.push(`<div class="heal-line">
+              <span class="heal-lbl">Sundered Sky proc (1× per combo)</span>
+              <span class="heal-val" id="heal-sundered">${heal.sunderedSkyHeal.toLocaleString()}</span>
+            </div>`);
+          }
+          if (heal.triumphActive) {
+            breakdown.push(`<div class="heal-line heal-line-triumph">
+              <span class="heal-lbl">Triumph (takedown)</span>
+              <span class="heal-val" id="heal-triumph">${heal.triumphHeal.toLocaleString()}</span>
+            </div>`);
+          }
+          // If Triumph is selected but the combo isn't a one-shot, show a faint line explaining
+          if (heal.hasTriumph && !willOneShot) {
+            breakdown.push(`<div class="heal-line heal-line-inactive">
+              <span class="heal-lbl">Triumph (inactive — needs takedown)</span>
+              <span class="heal-val">—</span>
+            </div>`);
+          }
+
+          return `
+          <div class="heal-section">
+            <div class="heal-header">
+              <span class="heal-title">Healing from this combo</span>
+              <span class="heal-total" id="heal-total">${heal.totalHeal.toLocaleString()} HP</span>
+            </div>
+            ${breakdown.join('')}
+          </div>`;
+        })()}
+
         <div class="mini-grid">
-          <div class="mini-card"><div class="ml">HP remaining</div><div class="mv">${Math.max(0, S.target.hp - total).toLocaleString()}</div><div class="ms">after combo</div></div>
-          <div class="mini-card"><div class="ml">Armor shaved</div><div class="mv">${S.target.armor - eff}</div><div class="ms">${S.target.armor} → ${eff}</div></div>
-          <div class="mini-card"><div class="ml">Dmg multiplier</div><div class="mv">${(100 / (100 + Math.max(0, eff))).toFixed(3)}×</div><div class="ms">vs effective armor</div></div>
-          <div class="mini-card"><div class="ml">Combos to kill</div><div class="mv">${hpPct > 0 ? Math.ceil(100 / Math.max(1, hpPct)) : '—'}</div><div class="ms">full combos</div></div>
+          <div class="mini-card"><div class="ml">HP remaining</div><div class="mv" id="dmg-hpRem">${Math.max(0, S.target.hp - total).toLocaleString()}</div><div class="ms">after combo</div></div>
+          <div class="mini-card"><div class="ml">Armor shaved</div><div class="mv" id="dmg-armorShaved">${S.target.armor - eff}</div><div class="ms"><span id="dmg-armorBefore">${S.target.armor}</span> → <span id="dmg-armorAfter">${eff}</span></div></div>
+          <div class="mini-card"><div class="ml">Dmg multiplier</div><div class="mv" id="dmg-mult">${(100 / (100 + Math.max(0, eff))).toFixed(3)}×</div><div class="ms">vs effective armor</div></div>
+          <div class="mini-card"><div class="ml">Combos to kill</div><div class="mv" id="dmg-combosToKill">${hpPct > 0 ? Math.ceil(100 / Math.max(1, hpPct)) : '—'}</div><div class="ms">full combos</div></div>
         </div>
       </div>
+    </div>
+
+    <div class="panel runes-panel-wide">
+      <div class="sec">Runes</div>
+      ${renderRunePanel()}
     </div>
   `;
 }
@@ -705,26 +1684,301 @@ function upd(path, val) {
   render();
 }
 function togItem(k) {
-  if (S.items[k]) {
-    S.items[k] = false;
-  } else if (selectedCount() < ITEM_LIMIT) {
-    S.items[k] = true;
-  }
+  if (S.items[k]) S.items[k] = false;
+  else if (selectedCount() < ITEM_LIMIT) S.items[k] = true;
   render();
 }
 function setBoot(k) {
-  if (S.boot === k) {
-    S.boot = null;
-  } else if (S.boot || selectedCount() < ITEM_LIMIT) {
-    // can swap to a different boot freely; can pick a boot if under limit
-    S.boot = k;
+  if (S.boot === k) S.boot = null;
+  else if (S.boot || selectedCount() < ITEM_LIMIT) S.boot = k;
+  render();
+}
+function setCombo(k) { S.combo = k; render(); }
+
+function setPrimaryTree(treeId) {
+  if (treeId === S.primaryTreeId) return;
+  // If new primary tree is the current secondary, swap them
+  if (treeId === S.secondaryTreeId) {
+    S.secondaryTreeId = S.primaryTreeId;
+  }
+  S.primaryTreeId = treeId;
+  // Reset selections for the new primary tree
+  const primary = getTree(treeId);
+  if (primary) {
+    S.keystoneId = primary.slots[0].runes[0].id;
+    S.primarySlots = [
+      primary.slots[1].runes[0].id,
+      primary.slots[2].runes[0].id,
+      primary.slots[3].runes[0].id,
+    ];
+  }
+  // Reset secondary if needed
+  const secondary = getTree(S.secondaryTreeId);
+  if (secondary) {
+    S.secondarySlots = [
+      secondary.slots[1].runes[0].id,
+      secondary.slots[2].runes[0].id,
+    ];
+  }
+  // Update conditional toggles
+  S.conqueror.active = (S.keystoneId === 8010);
+  S.lastStand.active = S.primarySlots.includes(8299);
+  render();
+}
+
+function setSecondaryTree(treeId) {
+  if (treeId === S.primaryTreeId) return;
+  S.secondaryTreeId = treeId;
+  const secondary = getTree(treeId);
+  if (secondary) {
+    S.secondarySlots = [
+      secondary.slots[1].runes[0].id,
+      secondary.slots[2].runes[0].id,
+    ];
   }
   render();
 }
-function togR(k) { S.runes[k] = !S.runes[k]; render(); }
-function setCombo(k) { S.combo = k; render(); }
 
-render();
+function setKeystone(runeId) {
+  S.keystoneId = runeId;
+  S.conqueror.active = (runeId === 8010);
+  render();
+}
+
+function setPrimarySlot(slotIdx, runeId) {
+  S.primarySlots[slotIdx] = runeId;
+  S.lastStand.active = S.primarySlots.includes(8299);
+  render();
+}
+
+function toggleSecondaryRune(runeId) {
+  const secondary = getTree(S.secondaryTreeId);
+  if (!secondary) return;
+
+  // Already selected? Clicking your own selected rune is a no-op (matches Riot client).
+  if (S.secondarySlots.includes(runeId)) return;
+
+  // Find which slot (1, 2, or 3) this rune lives in
+  let slotOfRune = -1;
+  for (let i = 1; i <= 3; i++) {
+    if (secondary.slots[i].runes.find(r => r.id === runeId)) {
+      slotOfRune = i;
+      break;
+    }
+  }
+  if (slotOfRune === -1) return;
+
+  // Is one of our currently-selected runes in the same slot? If so, replace it
+  // (one pick per slot is the fundamental rule — this trumps FIFO).
+  const existingFromSameSlot = S.secondarySlots.find(id => {
+    return secondary.slots[slotOfRune].runes.some(r => r.id === id);
+  });
+  if (existingFromSameSlot) {
+    S.secondarySlots = S.secondarySlots.map(id =>
+      id === existingFromSameSlot ? runeId : id
+    );
+  } else if (S.secondarySlots.length < 2) {
+    // Less than 2 picks total — just append
+    S.secondarySlots.push(runeId);
+  } else {
+    // Two picks already, picking from a third (currently-empty) slot.
+    // FIFO: drop the oldest, append the new one.
+    S.secondarySlots = [S.secondarySlots[1], runeId];
+  }
+  render();
+}
+
+function setShard(rowIdx, shardId) {
+  S.shards[rowIdx] = shardId;
+  render();
+}
+
+// =============================================================================
+// SLIDER DRAG TRACKING
+// =============================================================================
+//
+// Native <input type="range"> supports click-and-drag, but our sliders' oninput
+// handlers call render(), which rebuilds the entire DOM via innerHTML — that
+// destroys the slider element mid-drag and breaks the gesture. So:
+//   - On slider mousedown/touchstart, set a flag and pause full re-renders.
+//   - During the drag, only update the displayed values (damage numbers, stat
+//     cards, bars, slider's own label) via direct DOM patches.
+//   - On mouseup, clear the flag and do one final full render to catch any
+//     visibility-conditional UI (panels that appear/disappear based on state).
+
+window._sliderDragging = false;
+
+function startSliderDrag() {
+  window._sliderDragging = true;
+}
+function endSliderDrag() {
+  if (window._sliderDragging) {
+    window._sliderDragging = false;
+    render();
+  }
+}
+
+// Listen at the document level. mousedown bubbles up from the slider; mouseup is
+// always reliable at the document level even if the cursor leaves the slider.
+document.addEventListener('mousedown', e => {
+  if (e.target instanceof HTMLInputElement && e.target.type === 'range') {
+    startSliderDrag();
+  }
+});
+document.addEventListener('mouseup', endSliderDrag);
+document.addEventListener('touchstart', e => {
+  if (e.target instanceof HTMLInputElement && e.target.type === 'range') {
+    startSliderDrag();
+  }
+}, { passive: true });
+document.addEventListener('touchend', endSliderDrag);
+
+// Recompute everything and patch only the parts that show live values during drag.
+// We do NOT touch any input element — only output text and style.
+function updateLiveDisplays() {
+  const { out, stats, ea } = calcAll();
+  const combo = COMBOS[S.combo].seq;
+  let total = 0;
+  const disp = combo.map(k => {
+    const v = out[k] || 0;
+    total += v;
+    return { k, v };
+  });
+  const maxDmg = Math.max(...disp.map(x => x.v), 1);
+  const hpPct = Math.round((total / S.target.hp) * 100);
+  const eff = Math.round(ea);
+
+  // Helper to safely set textContent if the element exists
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  const setWidth = (id, pct) => {
+    const el = document.getElementById(id);
+    if (el) el.style.width = pct + '%';
+  };
+
+  // Top stat cards (Total AD, Bonus AD, Leth, Flat pen, % pen, Base AD)
+  setText('stat-totalAD', Math.round(stats.totalAD));
+  setText('stat-bonusAD', Math.round(stats.bonusAD));
+  setText('stat-leth', stats.leth);
+  setText('stat-flatPen', Math.round(stats.flatPen));
+  setText('stat-penPct', stats.penPct.toFixed(1) + '%');
+  setText('stat-baseAD', Math.round(stats.baseAD));
+
+  // Slider value labels (the small numbers next to each slider)
+  setText('val-level', S.level);
+  setText('val-armor', S.target.armor);
+  setText('val-hp', S.target.hp.toLocaleString());
+  setText('val-qRank', S.qRank);
+  setText('val-wRank', S.wRank);
+  setText('val-rRank', S.rRank);
+  setText('val-bcStacks', S.bcStacks + '/6');
+  setText('val-windMissingPct', S.windMissingPct + '%');
+  setText('val-conqStacks', S.conqueror.stacks + '/12');
+  setText('val-lsHpPct', S.lastStand.hpPct + '%');
+  setText('val-gluttonStacks', S.gluttonStacks + '/6');
+
+  // Damage output panel
+  setText('dmg-total', total.toLocaleString());
+  setText('dmg-hpRem', Math.max(0, S.target.hp - total).toLocaleString());
+  setText('dmg-armorShaved', S.target.armor - eff);
+  setText('dmg-armorBefore', S.target.armor);
+  setText('dmg-armorAfter', eff);
+  setText('dmg-mult', (100 / (100 + Math.max(0, eff))).toFixed(3) + '×');
+  setText('dmg-combosToKill', hpPct > 0 ? Math.ceil(100 / Math.max(1, hpPct)) : '—');
+  setText('dmg-pctOfHp', Math.min(hpPct, 100));
+  setText('dmg-hpTotal', S.target.hp.toLocaleString());
+
+  // Effective armor in the Target panel header
+  setText('eff-armor-display', eff);
+
+  // Per-ability damage bars
+  disp.forEach(({ k, v }) => {
+    setText('dmg-' + k, v.toLocaleString());
+    setWidth('bar-' + k, Math.round(v / maxDmg * 100));
+  });
+
+  // The big damage HP-coverage bar
+  setWidth('hp-coverage-bar', Math.min(hpPct, 100));
+
+  // Healing numbers (only present in DOM if the build has any healing source)
+  const willOneShot = hpPct >= 100;
+  const heal = calcHealing(out, total, willOneShot);
+  setText('heal-lifesteal', heal.lifestealHeal.toLocaleString());
+  setText('heal-omnivamp', heal.omnivampHeal.toLocaleString());
+  setText('heal-sundered', heal.sunderedSkyHeal.toLocaleString());
+  setText('heal-triumph', heal.triumphHeal.toLocaleString());
+  setText('heal-total', heal.totalHeal.toLocaleString() + ' HP');
+
+  // Slider value labels for the "your HP" inputs
+  setText('val-rivenMaxHp', S.rivenMaxHp.toLocaleString());
+  setText('val-rivenMissingPct', S.rivenMissingPct + '%');
+}
+
+// Walk a shard <img> through its onerror fallback chain (data-alt1, data-alt2)
+// before finally hiding it. Avoids brittle inline onerror string manipulation.
+function shardIconFallback(img) {
+  const alt1 = img.getAttribute('data-alt1');
+  const alt2 = img.getAttribute('data-alt2');
+  if (alt1 && img.src !== alt1) {
+    img.src = alt1;
+    return;
+  }
+  if (alt2 && img.src !== alt2) {
+    img.src = alt2;
+    return;
+  }
+  img.style.display = 'none';
+}
+
+// =============================================================================
+// FLOATING TOOLTIP (rune + stat shard hover)
+// =============================================================================
+
+function showTooltip(event, name, shortDesc, longDesc) {
+  const el = document.getElementById('rune-tooltip');
+  if (!el) return;
+  el.querySelector('.rt-name').textContent = name || '';
+  el.querySelector('.rt-short').textContent = shortDesc || '';
+  el.querySelector('.rt-long').textContent = longDesc || '';
+  el.classList.add('visible');
+  positionTooltip(event);
+  document.addEventListener('mousemove', positionTooltip);
+}
+
+function positionTooltip(event) {
+  const el = document.getElementById('rune-tooltip');
+  if (!el || !el.classList.contains('visible')) return;
+  const pad = 14;
+  const rect = el.getBoundingClientRect();
+  let x = event.clientX + pad;
+  let y = event.clientY + pad;
+  if (x + rect.width > window.innerWidth - 8) {
+    x = event.clientX - rect.width - pad;
+  }
+  if (y + rect.height > window.innerHeight - 8) {
+    y = event.clientY - rect.height - pad;
+  }
+  if (x < 8) x = 8;
+  if (y < 8) y = 8;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+}
+
+function hideTooltip() {
+  const el = document.getElementById('rune-tooltip');
+  if (!el) return;
+  el.classList.remove('visible');
+  document.removeEventListener('mousemove', positionTooltip);
+}
+
+// =============================================================================
+// INIT
+// =============================================================================
+render(); // Render once with loading state
+loadRuneData();
+loadShardIcons();
 </script>
 </body>
 </html>
